@@ -90,8 +90,9 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
 
     // Draw creatures
     for (const creature of state.creatures) {
-      const { x, y, angle, size, color, energy, id } = creature;
+      const { x, y, angle, size, color, energy, id, age } = creature;
       const isSelected = selectedCreature?.id === id;
+      const isNewborn = age < 60; // Young creature (1 second old)
 
       // Energy-based opacity
       const opacity = 0.5 + (energy / 100) * 0.5;
@@ -100,6 +101,19 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(angle);
+
+      // Newborn glow effect
+      if (isNewborn) {
+        const glowIntensity = 1 - (age / 60); // Fade out over time
+        const glowRadius = size * 3;
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, glowRadius);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${0.4 * glowIntensity})`);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.beginPath();
+        ctx.arc(0, 0, glowRadius, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+      }
 
       // Selection highlight and sense radius
       if (isSelected) {
