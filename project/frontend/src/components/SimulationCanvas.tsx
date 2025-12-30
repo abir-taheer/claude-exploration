@@ -29,6 +29,7 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trailsRef = useRef<Map<string, Array<{x: number, y: number}>>>(new Map());
   const prevCreatureIdsRef = useRef<Set<string>>(new Set());
+  const prevFoodRef = useRef<Map<string, {x: number, y: number}>>(new Map());
   const particlesRef = useRef<Particle[]>([]);
 
   // Handle click to select creature
@@ -101,11 +102,44 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
     }
     prevCreatureIdsRef.current = currentCreatureIds;
 
+    // Detect food eaten and spawn green particles
+    const currentFoodIds = new Set(state.food.map(f => f.id));
+    for (const [id, pos] of prevFoodRef.current) {
+      if (!currentFoodIds.has(id)) {
+        // Food was eaten - spawn particles
+        const particleCount = 6;
+        for (let i = 0; i < particleCount; i++) {
+          const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.3;
+          const speed = 0.5 + Math.random() * 1.5;
+          particlesRef.current.push({
+            x: pos.x,
+            y: pos.y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 1, // Float upward
+            color: '#44ff44',
+            life: 20,
+            maxLife: 20,
+            size: 2 + Math.random() * 2,
+          });
+        }
+      }
+    }
+    // Update food tracking
+    prevFoodRef.current.clear();
+    for (const food of state.food) {
+      prevFoodRef.current.set(food.id, { x: food.x, y: food.y });
+    }
+
     // Update and filter particles
     particlesRef.current = particlesRef.current.filter(p => {
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.1; // Gravity
+      // Different gravity based on particle color (green floats, red falls)
+      if (p.color === '#44ff44') {
+        p.vy += 0.02; // Light upward drift
+      } else {
+        p.vy += 0.1; // Gravity for death particles
+      }
       p.life--;
       return p.life > 0;
     });
@@ -164,12 +198,16 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       }
     }
 
-    // Draw death particles
+    // Draw particles (death: red, food eaten: green)
     for (const particle of particlesRef.current) {
       const alpha = particle.life / particle.maxLife;
       ctx.beginPath();
       ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 68, 68, ${alpha})`;
+      // Parse hex color to rgba
+      const r = parseInt(particle.color.slice(1, 3), 16);
+      const g = parseInt(particle.color.slice(3, 5), 16);
+      const b = parseInt(particle.color.slice(5, 7), 16);
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
       ctx.fill();
     }
 
