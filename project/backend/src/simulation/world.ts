@@ -1,6 +1,6 @@
 // World simulation: manages creatures, food, and simulation loop
 
-import { Creature, Food, WorldConfig, WorldState, WorldStats, Vector2D } from './types';
+import { Creature, DietType, Food, WorldConfig, WorldState, WorldStats, Vector2D } from './types';
 import {
   createRandomCreature,
   createCreature,
@@ -10,6 +10,7 @@ import {
   metabolize,
   reproduce,
   mutateGenome,
+  TargetInfo,
 } from './creature';
 
 let foodIdCounter = 0;
@@ -126,13 +127,16 @@ function calculateStats(creatures: Creature[]): WorldStats {
   };
 }
 
-// Find nearest food within creature's sensing radius
+// Find nearest food within creature's sensing radius (only for herbivores/omnivores)
 function findNearestFood(
   creature: Creature,
   food: Food[],
   worldWidth: number,
   worldHeight: number
 ): { food: Food; distance: number; angle: number } | null {
+  // Carnivores don't eat plants
+  if (creature.genome.dietType === DietType.Carnivore) return null;
+
   let nearest: { food: Food; distance: number; angle: number } | null = null;
 
   for (const f of food) {
@@ -152,6 +156,110 @@ function findNearestFood(
   return nearest;
 }
 
+// Check if creature A can hunt creature B
+function canHunt(hunter: Creature, prey: Creature): boolean {
+  // Herbivores can't hunt
+  if (hunter.genome.dietType === DietType.Herbivore) return false;
+
+  // Carnivores hunt herbivores and smaller omnivores
+  // Omnivores hunt smaller herbivores
+  const hunterSize = hunter.genome.size;
+  const preySize = prey.genome.size;
+
+  if (hunter.genome.dietType === DietType.Carnivore) {
+    // Carnivores can hunt herbivores of any size, or smaller omnivores
+    if (prey.genome.dietType === DietType.Herbivore) return true;
+    if (prey.genome.dietType === DietType.Omnivore && hunterSize > preySize * 0.8) return true;
+    return false;
+  }
+
+  if (hunter.genome.dietType === DietType.Omnivore) {
+    // Omnivores can hunt smaller herbivores
+    if (prey.genome.dietType === DietType.Herbivore && hunterSize > preySize) return true;
+    return false;
+  }
+
+  return false;
+}
+
+// Check if creature A should flee from creature B
+function shouldFlee(creature: Creature, other: Creature): boolean {
+  return canHunt(other, creature);
+}
+
+// Find nearest prey within creature's sensing radius
+function findNearestPrey(
+  creature: Creature,
+  creatures: Creature[],
+  worldWidth: number,
+  worldHeight: number
+): { prey: Creature; distance: number; angle: number } | null {
+  let nearest: { prey: Creature; distance: number; angle: number } | null = null;
+
+  for (const other of creatures) {
+    if (other.id === creature.id) continue;
+    if (!canHunt(creature, other)) continue;
+
+    const dist = distance(creature.position, other.position, worldWidth, worldHeight);
+    if (dist <= creature.genome.senseRadius) {
+      if (!nearest || dist < nearest.distance) {
+        const angle = angleTo(creature.position, other.position, worldWidth, worldHeight);
+        let relativeAngle = angle - creature.angle;
+        while (relativeAngle > Math.PI) relativeAngle -= Math.PI * 2;
+        while (relativeAngle < -Math.PI) relativeAngle += Math.PI * 2;
+        nearest = { prey: other, distance: dist, angle: relativeAngle };
+      }
+    }
+  }
+
+  return nearest;
+}
+
+// Find nearest predator within creature's sensing radius
+function findNearestPredator(
+  creature: Creature,
+  creatures: Creature[],
+  worldWidth: number,
+  worldHeight: number
+): TargetInfo | null {
+  let nearest: TargetInfo | null = null;
+  let nearestDist = Infinity;
+
+  for (const other of creatures) {
+    if (other.id === creature.id) continue;
+    if (!shouldFlee(creature, other)) continue;
+
+    const dist = distance(creature.position, other.position, worldWidth, worldHeight);
+    if (dist <= creature.genome.senseRadius && dist < nearestDist) {
+      const angle = angleTo(creature.position, other.position, worldWidth, worldHeight);
+      let relativeAngle = angle - creature.angle;
+      while (relativeAngle > Math.PI) relativeAngle -= Math.PI * 2;
+      while (relativeAngle < -Math.PI) relativeAngle += Math.PI * 2;
+      nearest = { distance: dist, angle: relativeAngle };
+      nearestDist = dist;
+    }
+  }
+
+  return nearest;
+}
+
+// Check if hunter catches prey (attack succeeds)
+function checkAttackSuccess(hunter: Creature, prey: Creature): boolean {
+  const attackDist = hunter.genome.size + prey.genome.size;
+  const dist = Math.sqrt(
+    Math.pow(hunter.position.x - prey.position.x, 2) +
+    Math.pow(hunter.position.y - prey.position.y, 2)
+  );
+
+  if (dist > attackDist) return false;
+
+  // Attack roll: higher attack power vs higher defense
+  const attackRoll = hunter.genome.attackPower * (0.5 + Math.random() * 0.5);
+  const defenseRoll = prey.genome.defense * (0.5 + Math.random() * 0.5);
+
+  return attackRoll > defenseRoll;
+}
+
 // Check if creature can eat food
 function checkFoodCollision(creature: Creature, food: Food): boolean {
   const dist = Math.sqrt(
@@ -165,21 +273,35 @@ export function simulateTick(world: WorldState): {
   births: Creature[];
   deaths: Creature[];
   foodEaten: Food[];
+  kills: Array<{ hunter: Creature; prey: Creature }>;
 } {
   const { creatures, food, config } = world;
   const births: Creature[] = [];
   const deaths: Creature[] = [];
   const foodEaten: Food[] = [];
+  const kills: Array<{ hunter: Creature; prey: Creature }> = [];
+  const deadIds = new Set<string>();
 
   // Process each creature
   for (const creature of creatures) {
-    // Find nearest food
+    // Skip if already dead from being hunted
+    if (deadIds.has(creature.id)) continue;
+
+    // Find nearest food (for herbivores/omnivores)
     const nearestFood = findNearestFood(creature, food, config.width, config.height);
 
-    // Get neural input
+    // Find nearest prey (for carnivores/omnivores)
+    const nearestPrey = findNearestPrey(creature, creatures, config.width, config.height);
+
+    // Find nearest predator (for fleeing)
+    const nearestPredator = findNearestPredator(creature, creatures, config.width, config.height);
+
+    // Get neural input with all targets
     const input = getCreatureInput(
       creature,
-      nearestFood ? { angle: nearestFood.angle, distance: nearestFood.distance } : null
+      nearestFood ? { angle: nearestFood.angle, distance: nearestFood.distance } : null,
+      nearestPrey ? { angle: nearestPrey.angle, distance: nearestPrey.distance } : null,
+      nearestPredator
     );
 
     // Think and decide
@@ -191,14 +313,30 @@ export function simulateTick(world: WorldState): {
     // Metabolize (energy drain)
     metabolize(creature);
 
-    // Check for food eating
-    for (const f of food) {
-      if (!foodEaten.includes(f) && checkFoodCollision(creature, f)) {
-        creature.energy += f.energy * creature.genome.energyEfficiency;
+    // Check for hunting (carnivores/omnivores with high attack output)
+    if (decision.attack > 0.5 && nearestPrey && !deadIds.has(nearestPrey.prey.id)) {
+      if (checkAttackSuccess(creature, nearestPrey.prey)) {
+        // Successful hunt!
+        const energyGained = nearestPrey.prey.energy * creature.genome.energyEfficiency * 0.5;
+        creature.energy += energyGained;
         creature.energy = Math.min(100, creature.energy);
-        creature.foodEaten++;
-        foodEaten.push(f);
-        break; // Only eat one food per tick
+        creature.creaturesKilled++;
+
+        deadIds.add(nearestPrey.prey.id);
+        kills.push({ hunter: creature, prey: nearestPrey.prey });
+      }
+    }
+
+    // Check for food eating (herbivores/omnivores only)
+    if (creature.genome.dietType !== DietType.Carnivore) {
+      for (const f of food) {
+        if (!foodEaten.includes(f) && checkFoodCollision(creature, f)) {
+          creature.energy += f.energy * creature.genome.energyEfficiency;
+          creature.energy = Math.min(100, creature.energy);
+          creature.foodEaten++;
+          foodEaten.push(f);
+          break; // Only eat one food per tick
+        }
       }
     }
 
@@ -212,9 +350,17 @@ export function simulateTick(world: WorldState): {
       births.push(child);
     }
 
-    // Check for death
+    // Check for death (starvation)
     if (creature.energy <= 0) {
       deaths.push(creature);
+      deadIds.add(creature.id);
+    }
+  }
+
+  // Add killed creatures to deaths
+  for (const kill of kills) {
+    if (!deaths.includes(kill.prey)) {
+      deaths.push(kill.prey);
     }
   }
 
@@ -253,7 +399,7 @@ export function simulateTick(world: WorldState): {
     totalBirths: world.stats.totalBirths + births.length,
   };
 
-  return { births, deaths, foodEaten };
+  return { births, deaths, foodEaten, kills };
 }
 
 // Serializable state for sending to clients
@@ -270,6 +416,8 @@ export interface SerializedCreature {
   maxSpeed: number;
   age: number;
   foodEaten: number;
+  creaturesKilled: number;
+  dietType: string;
 }
 
 export interface SerializedFood {
@@ -306,6 +454,8 @@ export function serializeState(world: WorldState): SerializedState {
       maxSpeed: c.genome.maxSpeed,
       age: c.age,
       foodEaten: c.foodEaten,
+      creaturesKilled: c.creaturesKilled,
+      dietType: c.genome.dietType,
     })),
     food: world.food.map(f => ({
       id: f.id,

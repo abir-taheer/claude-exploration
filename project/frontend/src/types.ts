@@ -13,6 +13,8 @@ export interface SerializedCreature {
   maxSpeed: number;
   age: number;
   foodEaten: number;
+  creaturesKilled: number;
+  dietType: 'herbivore' | 'carnivore' | 'omnivore';
 }
 
 export interface SerializedFood {

@@ -62,6 +62,16 @@ export function CreatureInspector({ creature, onClose }: Props) {
         </div>
 
         <div style={rowStyle}>
+          <span>Diet Type:</span>
+          <span style={{
+            color: creature.dietType === 'herbivore' ? '#44cc44' :
+                   creature.dietType === 'carnivore' ? '#cc4444' : '#aa44aa'
+          }}>
+            {creature.dietType.charAt(0).toUpperCase() + creature.dietType.slice(1)}
+          </span>
+        </div>
+
+        <div style={rowStyle}>
           <span>Generation:</span>
           <span style={{ color: '#ff8844' }}>{creature.generation}</span>
         </div>
@@ -82,8 +92,15 @@ export function CreatureInspector({ creature, onClose }: Props) {
 
         <div style={rowStyle}>
           <span>Food Eaten:</span>
-          <span>{creature.foodEaten}</span>
+          <span style={{ color: '#44ff44' }}>{creature.foodEaten}</span>
         </div>
+
+        {creature.dietType !== 'herbivore' && (
+          <div style={rowStyle}>
+            <span>Kills:</span>
+            <span style={{ color: '#ff4444' }}>{creature.creaturesKilled}</span>
+          </div>
+        )}
 
         <h4 style={{ margin: '12px 0 6px 0', fontSize: '12px', color: '#888', borderTop: '1px solid #333', paddingTop: '8px' }}>Genome</h4>
 

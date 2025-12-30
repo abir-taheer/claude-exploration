@@ -1,6 +1,6 @@
 // Creature management: creation, mutation, reproduction
 
-import { Creature, Genome, Vector2D } from './types';
+import { Creature, DietType, Genome, Vector2D } from './types';
 import { getTotalWeights, NeuralInput, NeuralOutput, runNeuralNetwork } from './neural';
 
 let creatureIdCounter = 0;
@@ -19,23 +19,54 @@ function randomWeight(): number {
   return (Math.random() - 0.5) * 2; // -1 to 1
 }
 
-// Generate color from genome traits
+// Generate color from genome traits - now based on diet type
 function genomeToColor(genome: Genome): string {
-  // Map traits to RGB components
-  const r = Math.floor(128 + (genome.maxSpeed / 3) * 127);
-  const g = Math.floor(128 + (genome.energyEfficiency - 0.5) * 127);
-  const b = Math.floor(128 + (genome.senseRadius / 150) * 127);
-  return `rgb(${Math.min(255, r)}, ${Math.min(255, g)}, ${Math.min(255, b)})`;
+  // Base color by diet type
+  switch (genome.dietType) {
+    case DietType.Herbivore:
+      // Green-ish creatures (plant eaters)
+      const hGreen = Math.floor(180 + (genome.energyEfficiency - 0.5) * 75);
+      const hBlue = Math.floor(80 + (genome.senseRadius / 150) * 80);
+      return `rgb(80, ${Math.min(255, hGreen)}, ${Math.min(255, hBlue)})`;
+
+    case DietType.Carnivore:
+      // Red-ish creatures (predators)
+      const cRed = Math.floor(180 + genome.attackPower * 75);
+      const cGreen = Math.floor(40 + (genome.maxSpeed / 3) * 60);
+      return `rgb(${Math.min(255, cRed)}, ${Math.min(255, cGreen)}, 60)`;
+
+    case DietType.Omnivore:
+      // Purple-ish creatures (eat everything)
+      const oRed = Math.floor(150 + genome.attackPower * 50);
+      const oBlue = Math.floor(150 + genome.defense * 50);
+      return `rgb(${Math.min(255, oRed)}, 80, ${Math.min(255, oBlue)})`;
+
+    default:
+      return `rgb(128, 128, 128)`;
+  }
+}
+
+// Get random diet type with weighted distribution
+function randomDietType(): DietType {
+  const roll = Math.random();
+  if (roll < 0.5) return DietType.Herbivore;  // 50% herbivores
+  if (roll < 0.8) return DietType.Omnivore;   // 30% omnivores
+  return DietType.Carnivore;                   // 20% carnivores
 }
 
 export function createRandomGenome(): Genome {
   const weights = getTotalWeights();
+  const dietType = randomDietType();
 
   return {
     maxSpeed: randomRange(0.5, 3.0),
     turnRate: randomRange(0.1, 0.5),
     size: randomRange(3, 15),
     senseRadius: randomRange(30, 150),
+
+    dietType,
+    attackPower: randomRange(0.3, 1.0),
+    defense: randomRange(0.3, 1.0),
 
     weightsInputHidden: Array.from({ length: weights.inputHidden }, randomWeight),
     weightsHiddenOutput: Array.from({ length: weights.hiddenOutput }, randomWeight),
@@ -64,6 +95,7 @@ export function createCreature(
     age: 0,
     color: genomeToColor(genome),
     foodEaten: 0,
+    creaturesKilled: 0,
     distanceTraveled: 0,
     generation,
   };
@@ -93,6 +125,18 @@ function mutateWeights(weights: number[], rate: number, strength: number): numbe
   });
 }
 
+// Mutate diet type (rare, only 5% chance when mutation occurs)
+function mutateDietType(parentDiet: DietType): DietType {
+  if (Math.random() > 0.05) return parentDiet;
+  // Small chance to shift diet type
+  const types = [DietType.Herbivore, DietType.Omnivore, DietType.Carnivore];
+  const currentIndex = types.indexOf(parentDiet);
+  // Can only shift to adjacent diet (herbivore <-> omnivore <-> carnivore)
+  if (currentIndex === 0) return DietType.Omnivore;
+  if (currentIndex === 2) return DietType.Omnivore;
+  return Math.random() < 0.5 ? DietType.Herbivore : DietType.Carnivore;
+}
+
 export function mutateGenome(parent: Genome, rate: number, strength: number): Genome {
   const shouldMutate = () => Math.random() < rate;
 
@@ -101,6 +145,10 @@ export function mutateGenome(parent: Genome, rate: number, strength: number): Ge
     turnRate: shouldMutate() ? mutateValue(parent.turnRate, 0.1, 0.5, strength * 0.1) : parent.turnRate,
     size: shouldMutate() ? mutateValue(parent.size, 3, 15, strength * 3) : parent.size,
     senseRadius: shouldMutate() ? mutateValue(parent.senseRadius, 30, 150, strength * 20) : parent.senseRadius,
+
+    dietType: shouldMutate() ? mutateDietType(parent.dietType) : parent.dietType,
+    attackPower: shouldMutate() ? mutateValue(parent.attackPower, 0.3, 1.0, strength * 0.2) : parent.attackPower,
+    defense: shouldMutate() ? mutateValue(parent.defense, 0.3, 1.0, strength * 0.2) : parent.defense,
 
     weightsInputHidden: mutateWeights(parent.weightsInputHidden, rate, strength),
     weightsHiddenOutput: mutateWeights(parent.weightsHiddenOutput, rate, strength),
@@ -129,16 +177,26 @@ export function reproduce(
   return createCreature(position, childGenome, parent.generation + 1);
 }
 
+// Target info for neural input
+export interface TargetInfo {
+  angle: number;
+  distance: number;
+}
+
 // Get neural network input for a creature
 export function getCreatureInput(
   creature: Creature,
-  nearestFood: { angle: number; distance: number } | null
+  nearestFood: TargetInfo | null,
+  nearestPrey: TargetInfo | null,
+  nearestPredator: TargetInfo | null
 ): NeuralInput {
   return {
     foodAngle: nearestFood ? nearestFood.angle / Math.PI : 0,
     foodDistance: nearestFood ? Math.min(1, nearestFood.distance / creature.genome.senseRadius) : 1,
+    preyAngle: nearestPrey ? nearestPrey.angle / Math.PI : 0,
+    preyDistance: nearestPrey ? Math.min(1, nearestPrey.distance / creature.genome.senseRadius) : 1,
+    predatorAngle: nearestPredator ? nearestPredator.angle / Math.PI : 0,
     energyLevel: creature.energy / 100,
-    noise: (Math.random() - 0.5) * 0.2,
     bias: 1,
   };
 }

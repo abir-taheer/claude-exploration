@@ -1,5 +1,12 @@
 // Core types for the evolutionary simulation
 
+// Creature diet types
+export enum DietType {
+  Herbivore = 'herbivore',   // Only eats plants
+  Carnivore = 'carnivore',   // Only eats other creatures
+  Omnivore = 'omnivore',     // Eats both plants and creatures
+}
+
 export interface Vector2D {
   x: number;
   y: number;
@@ -12,14 +19,21 @@ export interface Genome {
   size: number;          // 3 - 15 pixels radius
   senseRadius: number;   // 30 - 150 pixels
 
+  // Diet type (determines what creature can eat)
+  dietType: DietType;
+
+  // Hunting traits (for carnivores/omnivores)
+  attackPower: number;   // 0.3 - 1.0 damage multiplier
+  defense: number;       // 0.3 - 1.0 damage reduction
+
   // Neural network weights (simple feedforward)
-  // 5 inputs -> 6 hidden -> 2 outputs
-  // Inputs: food angle, food distance, energy level, random noise, bias
-  // Outputs: turn amount (-1 to 1), speed (0 to 1)
-  weightsInputHidden: number[];  // 5*6 = 30 weights
-  weightsHiddenOutput: number[]; // 6*2 = 12 weights
-  biasHidden: number[];          // 6 biases
-  biasOutput: number[];          // 2 biases
+  // 7 inputs -> 8 hidden -> 3 outputs
+  // Inputs: food angle, food distance, prey angle, prey distance, predator angle, energy level, bias
+  // Outputs: turn amount (-1 to 1), speed (0 to 1), attack (0 or 1)
+  weightsInputHidden: number[];  // 7*8 = 56 weights
+  weightsHiddenOutput: number[]; // 8*3 = 24 weights
+  biasHidden: number[];          // 8 biases
+  biasOutput: number[];          // 3 biases
 
   // Metabolism
   energyEfficiency: number;  // 0.5 - 1.5 multiplier for energy from food
@@ -42,6 +56,7 @@ export interface Creature {
 
   // Stats
   foodEaten: number;
+  creaturesKilled: number;
   distanceTraveled: number;
   generation: number;
 }

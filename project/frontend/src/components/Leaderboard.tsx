@@ -57,11 +57,20 @@ export function Leaderboard({ creatures, selectedId, onSelect }: Props) {
             borderRadius: '50%',
             flexShrink: 0,
           }} />
+          <span style={{
+            color: creature.dietType === 'herbivore' ? '#44cc44' :
+                   creature.dietType === 'carnivore' ? '#cc4444' : '#aa44aa',
+            width: '16px',
+            fontSize: '10px',
+          }}>
+            {creature.dietType === 'herbivore' ? '🌱' :
+             creature.dietType === 'carnivore' ? '🔴' : '🟣'}
+          </span>
           <span style={{ flex: 1, color: '#aaa' }}>
             Gen {creature.generation}
           </span>
           <span style={{ color: '#44ff44' }}>
-            {creature.foodEaten}
+            {creature.foodEaten + creature.creaturesKilled}
           </span>
         </div>
       ))}
