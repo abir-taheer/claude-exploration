@@ -9,8 +9,13 @@ interface Props {
   onSelectCreature: (creature: SerializedCreature | null) => void;
 }
 
+// Trail configuration
+const TRAIL_LENGTH = 20;
+const TRAIL_OPACITY = 0.3;
+
 export function SimulationCanvas({ state, width, height, selectedCreature, onSelectCreature }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const trailsRef = useRef<Map<string, Array<{x: number, y: number}>>>(new Map());
 
   // Handle click to select creature
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -51,6 +56,29 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
     ctx.fillStyle = '#0a0a0f';
     ctx.fillRect(0, 0, width, height);
 
+    // Update trails for each creature
+    const currentCreatureIds = new Set(state.creatures.map(c => c.id));
+
+    // Remove trails for dead creatures
+    for (const id of trailsRef.current.keys()) {
+      if (!currentCreatureIds.has(id)) {
+        trailsRef.current.delete(id);
+      }
+    }
+
+    // Update trails with current positions
+    for (const creature of state.creatures) {
+      let trail = trailsRef.current.get(creature.id);
+      if (!trail) {
+        trail = [];
+        trailsRef.current.set(creature.id, trail);
+      }
+      trail.push({ x: creature.x, y: creature.y });
+      if (trail.length > TRAIL_LENGTH) {
+        trail.shift();
+      }
+    }
+
     // Draw grid (subtle)
     ctx.strokeStyle = '#1a1a2a';
     ctx.lineWidth = 1;
@@ -66,6 +94,23 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       ctx.moveTo(0, y);
       ctx.lineTo(width, y);
       ctx.stroke();
+    }
+
+    // Draw creature trails
+    for (const creature of state.creatures) {
+      const trail = trailsRef.current.get(creature.id);
+      if (trail && trail.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(trail[0].x, trail[0].y);
+        for (let i = 1; i < trail.length; i++) {
+          ctx.lineTo(trail[i].x, trail[i].y);
+        }
+        ctx.strokeStyle = creature.color.replace('rgb', 'rgba').replace(')', `, ${TRAIL_OPACITY})`);
+        ctx.lineWidth = creature.size * 0.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+      }
     }
 
     // Draw food
