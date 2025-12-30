@@ -93,3 +93,12 @@ Timestamped log of project activity.
 - Added diet diversity re-seeding (spawns missing diet types periodically)
 - Added population-by-diet-type chart (green/red/purple lines over time)
 - Fixed creature spinning: added random noise + minimum movement speed
+
+### Advanced Features
+- Food Hotspots: 3-5 clusters where food spawns more frequently
+- Random Events system:
+  - Food Bonanza: 15-30 bonus food in one area
+  - Predator Surge: 2-4 strong carnivores spawn
+  - Migration: 5-10 herbivores spawn together
+- Improved creature exploration: sine-wave wandering when no target
+- Event visualization with pulsing circles and labels
