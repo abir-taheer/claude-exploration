@@ -18,24 +18,39 @@ Each colored blob is a **creature** with:
 
 **Green dots** are food. Creatures must eat to survive and reproduce.
 
+## Creature Types
+
+The simulation features three diet types that form a food chain:
+
+| Type | Color | Diet | Behavior |
+|------|-------|------|----------|
+| 🌱 Herbivore | Green | Plants only | Grazes, flees from predators |
+| 🔴 Carnivore | Red | Creatures only | Hunts herbivores and smaller omnivores |
+| 🟣 Omnivore | Purple | Both | Versatile, hunts smaller herbivores |
+
+Diet types can slowly evolve through mutation, allowing the ecosystem to adapt!
+
 ## How Evolution Works
 
 1. **Survival Pressure**: Creatures lose energy over time and when moving
-2. **Food Competition**: Only creatures that find food survive
-3. **Reproduction**: Well-fed creatures (80+ energy) spawn offspring
-4. **Mutation**: Offspring inherit genes with small random changes
-5. **Selection**: Over generations, better food-finders dominate
+2. **Food Competition**: Herbivores compete for plants, carnivores hunt prey
+3. **Predator-Prey**: Carnivores hunt herbivores; omnivores hunt smaller prey
+4. **Reproduction**: Well-fed creatures (80+ energy) spawn offspring
+5. **Mutation**: Offspring inherit genes with small random changes
+6. **Selection**: Over generations, better hunters AND better evaders survive
 
 ## The Neural Network
 
-Each creature has a simple feedforward neural network:
+Each creature has a feedforward neural network that processes sensory input:
 
 ```
-Inputs (5)           Hidden (6)           Outputs (2)
+Inputs (7)           Hidden (8)           Outputs (3)
 ├─ Food angle    ──┐                  ┌── Turn direction
-├─ Food distance ──┼── [weights] ─────┼── Speed
+├─ Food distance ──┤                  ├── Speed
+├─ Prey angle    ──┼── [weights] ─────┼── Attack
+├─ Prey distance ──┤
+├─ Predator angle──┤
 ├─ Energy level  ──┤
-├─ Random noise  ──┤
 └─ Bias          ──┘
 ```
 
@@ -45,13 +60,16 @@ The network weights are encoded in the creature's genome and evolve over generat
 
 | Trait | Range | Effect |
 |-------|-------|--------|
+| Diet Type | H/C/O | What the creature can eat |
 | Max Speed | 0.5-3.0 | How fast the creature can move |
 | Turn Rate | 0.1-0.5 | How quickly it can change direction |
-| Size | 3-15px | Body size (bigger = more energy drain) |
-| Sense Radius | 30-150px | How far it can detect food |
-| Energy Efficiency | 0.5-1.5x | How much energy gained from food |
+| Size | 3-15px | Body size (bigger = more energy drain, better hunter) |
+| Sense Radius | 30-150px | How far it can detect food, prey, and predators |
+| Attack Power | 0.3-1.0 | Success rate when hunting |
+| Defense | 0.3-1.0 | Ability to escape predators |
+| Energy Efficiency | 0.5-1.5x | How much energy gained from food/prey |
 | Base Drain | 0.1-0.5 | Passive energy loss per tick |
-| Neural Weights | 50 values | Brain connection strengths |
+| Neural Weights | 91 values | Brain connection strengths |
 
 ## Features
 
