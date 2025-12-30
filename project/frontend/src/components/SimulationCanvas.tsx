@@ -13,9 +13,23 @@ interface Props {
 const TRAIL_LENGTH = 20;
 const TRAIL_OPACITY = 0.3;
 
+// Particle configuration
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  color: string;
+  life: number;
+  maxLife: number;
+  size: number;
+}
+
 export function SimulationCanvas({ state, width, height, selectedCreature, onSelectCreature }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trailsRef = useRef<Map<string, Array<{x: number, y: number}>>>(new Map());
+  const prevCreatureIdsRef = useRef<Set<string>>(new Set());
+  const particlesRef = useRef<Particle[]>([]);
 
   // Handle click to select creature
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -58,6 +72,43 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
 
     // Update trails for each creature
     const currentCreatureIds = new Set(state.creatures.map(c => c.id));
+
+    // Detect deaths and spawn particles
+    for (const id of prevCreatureIdsRef.current) {
+      if (!currentCreatureIds.has(id)) {
+        // This creature died - get its last known position from trail
+        const trail = trailsRef.current.get(id);
+        if (trail && trail.length > 0) {
+          const lastPos = trail[trail.length - 1];
+          // Spawn death particles
+          const particleCount = 8;
+          for (let i = 0; i < particleCount; i++) {
+            const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.5;
+            const speed = 1 + Math.random() * 2;
+            particlesRef.current.push({
+              x: lastPos.x,
+              y: lastPos.y,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              color: '#ff4444',
+              life: 30,
+              maxLife: 30,
+              size: 3 + Math.random() * 2,
+            });
+          }
+        }
+      }
+    }
+    prevCreatureIdsRef.current = currentCreatureIds;
+
+    // Update and filter particles
+    particlesRef.current = particlesRef.current.filter(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.1; // Gravity
+      p.life--;
+      return p.life > 0;
+    });
 
     // Remove trails for dead creatures
     for (const id of trailsRef.current.keys()) {
@@ -111,6 +162,15 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
         ctx.lineJoin = 'round';
         ctx.stroke();
       }
+    }
+
+    // Draw death particles
+    for (const particle of particlesRef.current) {
+      const alpha = particle.life / particle.maxLife;
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 68, 68, ${alpha})`;
+      ctx.fill();
     }
 
     // Draw food
