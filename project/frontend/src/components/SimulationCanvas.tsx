@@ -38,6 +38,7 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trailsRef = useRef<Map<string, Array<{x: number, y: number}>>>(new Map());
   const prevCreatureIdsRef = useRef<Set<string>>(new Set());
+  const creatureColorsRef = useRef<Map<string, string>>(new Map()); // Track creature colors for death particles
   const prevFoodRef = useRef<Map<string, {x: number, y: number}>>(new Map());
   const particlesRef = useRef<Particle[]>([]);
 
@@ -83,31 +84,38 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
     // Update trails for each creature
     const currentCreatureIds = new Set(state.creatures.map(c => c.id));
 
-    // Detect deaths and spawn particles
+    // Detect deaths and spawn particles with creature's color
     for (const id of prevCreatureIdsRef.current) {
       if (!currentCreatureIds.has(id)) {
         // This creature died - get its last known position from trail
         const trail = trailsRef.current.get(id);
+        const creatureColor = creatureColorsRef.current.get(id) || '#ff4444';
         if (trail && trail.length > 0) {
           const lastPos = trail[trail.length - 1];
-          // Spawn death particles
-          const particleCount = 8;
+          // Spawn death particles with creature's color
+          const particleCount = 10;
           for (let i = 0; i < particleCount; i++) {
             const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.5;
-            const speed = 1 + Math.random() * 2;
+            const speed = 1 + Math.random() * 2.5;
             particlesRef.current.push({
               x: lastPos.x,
               y: lastPos.y,
               vx: Math.cos(angle) * speed,
               vy: Math.sin(angle) * speed,
-              color: '#ff4444',
-              life: 30,
-              maxLife: 30,
-              size: 3 + Math.random() * 2,
+              color: creatureColor,
+              life: 35,
+              maxLife: 35,
+              size: 3 + Math.random() * 3,
             });
           }
         }
+        // Clean up color tracking
+        creatureColorsRef.current.delete(id);
       }
+    }
+    // Update creature colors for next frame
+    for (const creature of state.creatures) {
+      creatureColorsRef.current.set(creature.id, creature.color);
     }
     prevCreatureIdsRef.current = currentCreatureIds;
 
