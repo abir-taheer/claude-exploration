@@ -70,6 +70,17 @@ function App() {
       case 'c':
         setColorByGeneration(prev => !prev);
         break;
+      case 'f':
+        // Toggle fullscreen for the simulation container
+        const container = document.querySelector('[data-simulation-container]');
+        if (container) {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else {
+            container.requestFullscreen();
+          }
+        }
+        break;
     }
   }, [paused, pause, resume, reset, changeSpeed]);
 
@@ -129,8 +140,8 @@ function App() {
         alignItems: 'flex-start',
         position: 'relative',
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ position: 'relative' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }} data-simulation-container>
+          <div style={{ position: 'relative', backgroundColor: '#0a0a0f' }}>
             <SimulationCanvas
               state={state}
               width={worldWidth}
@@ -190,7 +201,7 @@ function App() {
         Watch artificial creatures evolve in real-time. Click to inspect creatures.
         <br />
         <span style={{ color: '#888' }}>
-          Shortcuts: Space=Pause, R=Reset, 1-4=Speed, C=Color Mode, Esc=Deselect
+          Shortcuts: Space=Pause, R=Reset, 1-4=Speed, C=Color Mode, F=Fullscreen, Esc=Deselect
         </span>
       </footer>
     </div>
