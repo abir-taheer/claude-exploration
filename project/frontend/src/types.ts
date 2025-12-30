@@ -58,11 +58,20 @@ export interface SerializedHotspot {
   radius: number;
 }
 
+export interface SerializedEvent {
+  type: 'food_bonanza' | 'predator_surge' | 'migration';
+  x: number;
+  y: number;
+  radius: number;
+  progress: number;
+}
+
 export interface SerializedState {
   tick: number;
   creatures: SerializedCreature[];
   food: SerializedFood[];
   hotspots: SerializedHotspot[];
+  events: SerializedEvent[];
   stats: WorldStats;
   config: {
     width: number;

@@ -213,6 +213,46 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       ctx.fill();
     }
 
+    // Draw active events with pulsing animation
+    for (const event of state.events || []) {
+      const alpha = 0.3 * (1 - event.progress); // Fade out over time
+      const pulseScale = 1 + Math.sin(state.tick * 0.1) * 0.1; // Gentle pulse
+      const radius = event.radius * pulseScale;
+
+      let color: string;
+      let label: string;
+      switch (event.type) {
+        case 'food_bonanza':
+          color = `rgba(100, 255, 100, ${alpha})`;
+          label = '🌿 Food Bonanza';
+          break;
+        case 'migration':
+          color = `rgba(100, 200, 255, ${alpha})`;
+          label = '🦋 Migration';
+          break;
+        default:
+          color = `rgba(255, 255, 255, ${alpha})`;
+          label = '';
+      }
+
+      // Draw event circle
+      ctx.beginPath();
+      ctx.arc(event.x, event.y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw label
+      if (label && event.progress < 0.3) {
+        ctx.fillStyle = color;
+        ctx.font = '12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, event.x, event.y - radius - 5);
+      }
+    }
+
     // Draw creature trails
     const maxGen = state.stats.maxGeneration;
     for (const creature of state.creatures) {

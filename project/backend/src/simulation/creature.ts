@@ -211,23 +211,36 @@ export function move(
   creature: Creature,
   decision: NeuralOutput,
   worldWidth: number,
-  worldHeight: number
+  worldHeight: number,
+  hasTarget: boolean = true
 ): void {
-  // Add random noise to prevent getting stuck in loops
-  // Noise decreases with higher speed (moving creatures explore naturally)
-  const noiseAmount = 0.1 * (1 - decision.speed);
-  const turnNoise = (Math.random() - 0.5) * noiseAmount;
+  // Exploration behavior when no target is nearby
+  // Use creature's age to create time-varying exploration patterns
+  let turnAmount = decision.turn * creature.genome.turnRate;
+  let speedMultiplier = decision.speed;
 
-  // Apply turn with noise
-  creature.angle += decision.turn * creature.genome.turnRate + turnNoise;
+  if (!hasTarget) {
+    // Much more exploration when no target - use sine waves for smooth wandering
+    const wanderPhase = creature.age * 0.05;
+    const wanderTurn = Math.sin(wanderPhase) * 0.3; // Gentle oscillation
+    turnAmount = wanderTurn + (Math.random() - 0.5) * 0.1; // Add noise
+    speedMultiplier = 0.7 + Math.sin(wanderPhase * 0.7) * 0.3; // Vary speed too
+  } else {
+    // Still add some noise to prevent perfect circles
+    const noiseAmount = 0.05 * (1 - decision.speed);
+    turnAmount += (Math.random() - 0.5) * noiseAmount;
+  }
+
+  // Apply turn
+  creature.angle += turnAmount;
 
   // Normalize angle
   while (creature.angle > Math.PI) creature.angle -= Math.PI * 2;
   while (creature.angle < -Math.PI) creature.angle += Math.PI * 2;
 
   // Calculate velocity with minimum speed to prevent standing still
-  const minSpeed = 0.2; // Creatures always move at least a little
-  const speed = Math.max(minSpeed, decision.speed) * creature.genome.maxSpeed;
+  const minSpeed = 0.3; // Creatures always move forward
+  const speed = Math.max(minSpeed, speedMultiplier) * creature.genome.maxSpeed;
   creature.velocity.x = Math.cos(creature.angle) * speed;
   creature.velocity.y = Math.sin(creature.angle) * speed;
 

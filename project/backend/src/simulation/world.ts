@@ -27,6 +27,96 @@ interface Hotspot {
 
 let hotspots: Hotspot[] = [];
 
+// Random events system
+interface ActiveEvent {
+  type: 'food_bonanza' | 'predator_surge' | 'migration';
+  startTick: number;
+  duration: number;
+  x: number;
+  y: number;
+  radius: number;
+}
+
+let activeEvents: ActiveEvent[] = [];
+let lastEventTick = 0;
+const EVENT_COOLDOWN = 600; // Minimum ticks between events
+const EVENT_CHANCE = 0.002; // Chance per tick to trigger event
+
+function checkForRandomEvent(world: WorldState): void {
+  if (world.tick - lastEventTick < EVENT_COOLDOWN) return;
+  if (Math.random() > EVENT_CHANCE) return;
+
+  const { config, creatures, food } = world;
+  const eventType = Math.random();
+
+  if (eventType < 0.5) {
+    // Food Bonanza - spawn lots of food in one area
+    const x = Math.random() * config.width;
+    const y = Math.random() * config.height;
+    const count = 15 + Math.floor(Math.random() * 15);
+    for (let i = 0; i < count; i++) {
+      if (food.length < config.maxFood * 1.5) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 80;
+        const fx = ((x + Math.cos(angle) * dist) + config.width) % config.width;
+        const fy = ((y + Math.sin(angle) * dist) + config.height) % config.height;
+        food.push({
+          id: generateFoodId(),
+          position: { x: fx, y: fy },
+          energy: config.foodEnergy * 1.5, // Bonus energy
+          size: 6 + config.foodEnergy / 4,
+        });
+      }
+    }
+    activeEvents.push({
+      type: 'food_bonanza',
+      startTick: world.tick,
+      duration: 180,
+      x, y, radius: 100,
+    });
+    console.log(`Event: Food Bonanza at (${x.toFixed(0)}, ${y.toFixed(0)})`);
+  } else if (eventType < 0.8) {
+    // Predator Surge - spawn a few carnivores
+    const count = 2 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < count; i++) {
+      const newCreature = createRandomCreature(config.width, config.height);
+      newCreature.genome.dietType = DietType.Carnivore;
+      newCreature.genome.attackPower = 0.7 + Math.random() * 0.3; // Strong predators
+      newCreature.color = genomeToColor(newCreature.genome);
+      creatures.push(newCreature);
+    }
+    console.log(`Event: Predator Surge (+${count} carnivores)`);
+  } else {
+    // Migration - spawn a group of herbivores
+    const x = Math.random() * config.width;
+    const y = Math.random() * config.height;
+    const count = 5 + Math.floor(Math.random() * 5);
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * 50;
+      const newCreature = createRandomCreature(config.width, config.height);
+      newCreature.genome.dietType = DietType.Herbivore;
+      newCreature.position.x = ((x + Math.cos(angle) * dist) + config.width) % config.width;
+      newCreature.position.y = ((y + Math.sin(angle) * dist) + config.height) % config.height;
+      newCreature.color = genomeToColor(newCreature.genome);
+      creatures.push(newCreature);
+    }
+    activeEvents.push({
+      type: 'migration',
+      startTick: world.tick,
+      duration: 120,
+      x, y, radius: 60,
+    });
+    console.log(`Event: Migration (+${count} herbivores)`);
+  }
+
+  lastEventTick = world.tick;
+}
+
+function updateEvents(tick: number): void {
+  activeEvents = activeEvents.filter(e => tick - e.startTick < e.duration);
+}
+
 function initializeHotspots(worldWidth: number, worldHeight: number): void {
   // Create 3-5 random hotspots
   const count = 3 + Math.floor(Math.random() * 3);
@@ -352,8 +442,11 @@ export function simulateTick(world: WorldState): {
     // Think and decide
     const decision = think(creature, input);
 
-    // Move
-    move(creature, decision, config.width, config.height);
+    // Determine if creature has any target to focus on
+    const hasTarget = nearestFood !== null || nearestPrey !== null || nearestPredator !== null;
+
+    // Move (with exploration behavior if no target)
+    move(creature, decision, config.width, config.height, hasTarget);
 
     // Metabolize (energy drain)
     metabolize(creature, config.energyDrainMultiplier);
@@ -463,6 +556,10 @@ export function simulateTick(world: WorldState): {
     food.push(createFood(config.width, config.height, config.foodEnergy));
   }
 
+  // Check for random events
+  checkForRandomEvent(world);
+  updateEvents(world.tick);
+
   // Update tick counter
   world.tick++;
 
@@ -508,11 +605,20 @@ export interface SerializedHotspot {
   radius: number;
 }
 
+export interface SerializedEvent {
+  type: 'food_bonanza' | 'predator_surge' | 'migration';
+  x: number;
+  y: number;
+  radius: number;
+  progress: number; // 0-1, how far through the event
+}
+
 export interface SerializedState {
   tick: number;
   creatures: SerializedCreature[];
   food: SerializedFood[];
   hotspots: SerializedHotspot[];
+  events: SerializedEvent[];
   stats: WorldStats;
   config: {
     width: number;
@@ -549,6 +655,13 @@ export function serializeState(world: WorldState): SerializedState {
       x: h.x,
       y: h.y,
       radius: h.radius,
+    })),
+    events: activeEvents.map(e => ({
+      type: e.type,
+      x: e.x,
+      y: e.y,
+      radius: e.radius,
+      progress: (world.tick - e.startTick) / e.duration,
     })),
     stats: world.stats,
     config: {
