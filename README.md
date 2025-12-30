@@ -99,7 +99,16 @@ The network weights are encoded in the creature's genome and evolve over generat
 | R | Reset with new random creatures |
 | 1-4 | Set speed (1x, 2x, 4x, 8x) |
 | C | Toggle generation-based color mode |
+| F | Toggle fullscreen mode |
 | Escape | Deselect current creature |
+
+## Quality of Life Features
+
+- **Auto-pause**: Simulation pauses when tab is hidden to save CPU
+- **Fullscreen mode**: Immersive viewing with F key
+- **Mini-map**: Overview of the world in top-right corner
+- **Creature tracking**: Click to select and follow any creature
+- **Generation colors**: Toggle color mode to visualize evolutionary lineages
 
 ## Configuration Options
 
