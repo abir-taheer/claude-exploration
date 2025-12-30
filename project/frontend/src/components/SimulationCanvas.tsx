@@ -198,6 +198,21 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       ctx.stroke();
     }
 
+    // Draw food hotspots (subtle green gradient zones)
+    for (const hotspot of state.hotspots || []) {
+      const gradient = ctx.createRadialGradient(
+        hotspot.x, hotspot.y, 0,
+        hotspot.x, hotspot.y, hotspot.radius
+      );
+      gradient.addColorStop(0, 'rgba(68, 255, 68, 0.08)');
+      gradient.addColorStop(0.7, 'rgba(68, 255, 68, 0.03)');
+      gradient.addColorStop(1, 'rgba(68, 255, 68, 0)');
+      ctx.beginPath();
+      ctx.arc(hotspot.x, hotspot.y, hotspot.radius, 0, Math.PI * 2);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+
     // Draw creature trails
     const maxGen = state.stats.maxGeneration;
     for (const creature of state.creatures) {

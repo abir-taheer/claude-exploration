@@ -52,10 +52,17 @@ export interface WorldConfig {
   energyDrainMultiplier: number;
 }
 
+export interface SerializedHotspot {
+  x: number;
+  y: number;
+  radius: number;
+}
+
 export interface SerializedState {
   tick: number;
   creatures: SerializedCreature[];
   food: SerializedFood[];
+  hotspots: SerializedHotspot[];
   stats: WorldStats;
   config: {
     width: number;

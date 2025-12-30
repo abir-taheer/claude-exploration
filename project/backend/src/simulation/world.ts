@@ -16,17 +16,57 @@ import {
 
 let foodIdCounter = 0;
 
+// Food hotspots - areas where food spawns more frequently
+// These create interesting competition zones
+interface Hotspot {
+  x: number;
+  y: number;
+  radius: number;
+  probability: number; // 0-1, chance to spawn here vs random
+}
+
+let hotspots: Hotspot[] = [];
+
+function initializeHotspots(worldWidth: number, worldHeight: number): void {
+  // Create 3-5 random hotspots
+  const count = 3 + Math.floor(Math.random() * 3);
+  hotspots = [];
+  for (let i = 0; i < count; i++) {
+    hotspots.push({
+      x: 50 + Math.random() * (worldWidth - 100),
+      y: 50 + Math.random() * (worldHeight - 100),
+      radius: 60 + Math.random() * 80,
+      probability: 0.4 + Math.random() * 0.3, // 40-70% of food spawns near hotspots
+    });
+  }
+}
+
 function generateFoodId(): string {
   return `f_${++foodIdCounter}`;
 }
 
 function createFood(worldWidth: number, worldHeight: number, energy: number): Food {
+  let x: number, y: number;
+
+  // 60% chance to spawn near a hotspot
+  if (hotspots.length > 0 && Math.random() < 0.6) {
+    const hotspot = hotspots[Math.floor(Math.random() * hotspots.length)];
+    const angle = Math.random() * Math.PI * 2;
+    const dist = Math.random() * hotspot.radius;
+    x = hotspot.x + Math.cos(angle) * dist;
+    y = hotspot.y + Math.sin(angle) * dist;
+    // Wrap around edges
+    x = ((x % worldWidth) + worldWidth) % worldWidth;
+    y = ((y % worldHeight) + worldHeight) % worldHeight;
+  } else {
+    // Random position
+    x = Math.random() * worldWidth;
+    y = Math.random() * worldHeight;
+  }
+
   return {
     id: generateFoodId(),
-    position: {
-      x: Math.random() * worldWidth,
-      y: Math.random() * worldHeight,
-    },
+    position: { x, y },
     energy,
     size: 4 + energy / 5,
   };
@@ -72,6 +112,9 @@ export function createDefaultConfig(): WorldConfig {
 export function createWorld(config: WorldConfig): WorldState {
   const creatures: Creature[] = [];
   const food: Food[] = [];
+
+  // Initialize food hotspots
+  initializeHotspots(config.width, config.height);
 
   // Spawn initial creatures
   for (let i = 0; i < config.initialCreatures; i++) {
@@ -459,10 +502,17 @@ export interface SerializedFood {
   size: number;
 }
 
+export interface SerializedHotspot {
+  x: number;
+  y: number;
+  radius: number;
+}
+
 export interface SerializedState {
   tick: number;
   creatures: SerializedCreature[];
   food: SerializedFood[];
+  hotspots: SerializedHotspot[];
   stats: WorldStats;
   config: {
     width: number;
@@ -494,6 +544,11 @@ export function serializeState(world: WorldState): SerializedState {
       x: f.position.x,
       y: f.position.y,
       size: f.size,
+    })),
+    hotspots: hotspots.map(h => ({
+      x: h.x,
+      y: h.y,
+      radius: h.radius,
     })),
     stats: world.stats,
     config: {
