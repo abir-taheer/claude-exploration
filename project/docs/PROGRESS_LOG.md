@@ -60,3 +60,10 @@ Timestamped log of project activity.
 - All features implemented
 - Docker containers running
 - Accessible at http://34.68.51.22
+
+### Additional Visual Polish
+- Added crown indicator for oldest creature
+- Added creature movement trails
+- Added death particles (red, falling)
+- Added food eating particles (green, floating up)
+- Added mini-map overview with selected creature highlight

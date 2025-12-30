@@ -76,6 +76,11 @@ The network weights are encoded in the creature's genome and evolve over generat
 - Click any entry to select and track that creature
 - Gold, silver, bronze highlighting for top 3
 
+### Mini-Map
+- Overlay in top-right showing world overview
+- Green dots for food, colored dots for creatures
+- Yellow highlight shows selected creature location
+
 ### Speed Controls
 - **1x, 2x, 4x, 8x** speed multipliers
 - Run evolution faster to see changes over time
