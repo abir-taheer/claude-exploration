@@ -53,10 +53,39 @@ The network weights are encoded in the creature's genome and evolve over generat
 | Base Drain | 0.1-0.5 | Passive energy loss per tick |
 | Neural Weights | 50 values | Brain connection strengths |
 
+## Features
+
+### Real-Time Visualization
+- **60 FPS rendering** with smooth creature movement
+- **Click to select** any creature and track it
+- **Sense radius** shown as dashed circle around selected creature
+- **Energy bars** above each creature showing health
+
+### Population History Graph
+- Track **population** and **generation** over time
+- Blue line shows population size
+- Orange line shows maximum generation reached
+
+### Leaderboard
+- See the **top 5 hunters** by food eaten
+- Click any entry to select and track that creature
+- Gold, silver, bronze highlighting for top 3
+
+### Speed Controls
+- **1x, 2x, 4x, 8x** speed multipliers
+- Run evolution faster to see changes over time
+
+### Creature Inspector
+- Click a creature to see detailed stats
+- View genome traits: size, speed, sense radius
+- Track age and total food eaten
+- Watch stats update in real-time
+
 ## Controls
 
 - **Pause/Resume**: Stop or continue the simulation
 - **Reset**: Start fresh with random creatures
+- **Speed**: 1x, 2x, 4x, 8x simulation speed
 - **Mutation Rate**: How often genes mutate (higher = more variation)
 - **Mutation Strength**: How much genes change when mutating
 - **Food Spawn Rate**: How quickly new food appears
@@ -108,10 +137,13 @@ project/
 ├── frontend/          # React visualization
 │   └── src/
 │       ├── components/
-│       │   ├── SimulationCanvas.tsx
-│       │   └── ControlPanel.tsx
+│       │   ├── SimulationCanvas.tsx  # Main canvas renderer
+│       │   ├── ControlPanel.tsx      # Config controls
+│       │   ├── HistoryGraph.tsx      # Population graph
+│       │   ├── CreatureInspector.tsx # Selected creature details
+│       │   └── Leaderboard.tsx       # Top hunters
 │       └── hooks/
-│           └── useSimulation.ts
+│           └── useSimulation.ts      # WebSocket connection
 └── docker/            # Deployment config
 ```
 
@@ -122,6 +154,9 @@ project/
 | `GET /health` | Server health + tick count |
 | `GET /api/stats` | Population statistics |
 | `GET /api/config` | Current configuration |
+| `GET /api/history` | Population history data |
+| `GET /api/speed` | Current simulation speed |
+| `POST /api/speed` | Set speed (1, 2, 4, or 8) |
 | `POST /api/pause` | Pause simulation |
 | `POST /api/resume` | Resume simulation |
 | `POST /api/reset` | Reset with new creatures |

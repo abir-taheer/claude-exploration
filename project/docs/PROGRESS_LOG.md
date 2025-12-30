@@ -47,7 +47,16 @@ Timestamped log of project activity.
 - Nginx reverse proxy for WebSocket and static files
 - Successfully deployed and running
 
+### Additional Features
+- Added population history graph
+- Added speed controls (1x, 2x, 4x, 8x)
+- Added creature selection and tracking
+- Added genome inspector showing creature details
+- Added sense radius visualization for selected creatures
+- Added leaderboard showing top 5 hunters
+- Updated README with all features
+
 ### Project Complete!
 - All features implemented
 - Docker containers running
-- Accessible at http://localhost:80
+- Accessible at http://34.68.51.22
