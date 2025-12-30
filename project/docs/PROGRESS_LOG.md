@@ -84,3 +84,12 @@ Timestamped log of project activity.
 - Diet types can evolve through mutation
 - Visual indicators: emoji icons in leaderboard, colors by diet type
 - Creature inspector shows diet type and kill count
+
+### Ecosystem Balance & Polish
+- Fixed reset button to immediately broadcast new state
+- Death particles now match creature color (see which type died)
+- Added lifespan/energy drain config slider (lower = longer lifespan)
+- Omnivores now 60% less efficient at eating plants (generalist tradeoff)
+- Added diet diversity re-seeding (spawns missing diet types periodically)
+- Added population-by-diet-type chart (green/red/purple lines over time)
+- Fixed creature spinning: added random noise + minimum movement speed
