@@ -60,6 +60,11 @@ The network weights are encoded in the creature's genome and evolve over generat
 - **Click to select** any creature and track it
 - **Sense radius** shown as dashed circle around selected creature
 - **Energy bars** above each creature showing health
+- **Movement trails** showing where each creature has been
+- **Newborn glow** - white aura around recently born creatures
+- **Crown indicator** - golden crown above the oldest living creature
+- **Death particles** - red particles burst when creatures die
+- **Eating particles** - green particles float up when food is consumed
 
 ### Population History Graph
 - Track **population** and **generation** over time
