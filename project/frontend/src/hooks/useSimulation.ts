@@ -1,7 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { SerializedState, WorldConfig, ServerMessage } from '../types';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws';
+// Construct WebSocket URL dynamically based on current host
+function getWebSocketUrl(): string {
+  if (import.meta.env.VITE_WS_URL) {
+    return import.meta.env.VITE_WS_URL;
+  }
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.host;
+  // In production (through nginx), ws is at /ws on same host
+  // In development, backend is on port 8080
+  if (window.location.port === '5173' || window.location.port === '5174') {
+    return 'ws://localhost:8080/ws';
+  }
+  return `${protocol}//${host}/ws`;
+}
 
 export function useSimulation() {
   const [state, setState] = useState<SerializedState | null>(null);
@@ -13,7 +26,9 @@ export function useSimulation() {
   // Connect to WebSocket
   useEffect(() => {
     const connect = () => {
-      const ws = new WebSocket(WS_URL);
+      const wsUrl = getWebSocketUrl();
+      console.log('Connecting to:', wsUrl);
+      const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         console.log('Connected to simulation server');

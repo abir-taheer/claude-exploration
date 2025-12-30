@@ -2,7 +2,7 @@
 
 Infrastructure and deployment documentation.
 
-## Target Architecture
+## Architecture
 
 ```
                 Internet
@@ -23,41 +23,88 @@ Infrastructure and deployment documentation.
 
 ## Docker Services
 
-### docker-compose.yml (planned)
-
 | Service | Image | Ports | Purpose |
 |---------|-------|-------|---------|
 | nginx | nginx:alpine | 80:80 | Reverse proxy |
-| api | evosim-api | 8080 | Go backend |
-| worker | evosim-worker | - | Simulation worker |
-| redis | redis:alpine | 6379 | State coordination |
+| backend | project-backend | 8080 (internal) | Go backend |
+| frontend | project-frontend | 80 (internal) | Static file server |
 
-## Deployment Steps
+## Running the Project
 
-1. Build Docker images
-2. Start with docker-compose
-3. Nginx routes traffic
-4. Access via server IP
+### Start
+```bash
+cd /home/abir/claude-exploration/project
+sudo docker compose up -d
+```
+
+### Stop
+```bash
+sudo docker compose down
+```
+
+### View logs
+```bash
+sudo docker compose logs -f
+sudo docker compose logs -f backend  # Backend only
+```
+
+### Rebuild after changes
+```bash
+sudo docker compose build
+sudo docker compose up -d
+```
+
+## File Structure
+
+```
+project/
+├── docker-compose.yml
+├── docker/
+│   ├── Dockerfile.backend
+│   ├── Dockerfile.frontend
+│   ├── nginx.conf
+│   └── nginx-frontend.conf
+├── backend/
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── src/
+│       ├── api/
+│       │   └── server.ts
+│       └── simulation/
+│           ├── types.ts
+│           ├── neural.ts
+│           ├── creature.ts
+│           ├── world.ts
+│           └── index.ts
+└── frontend/
+    ├── package.json
+    ├── vite.config.ts
+    └── src/
+        ├── App.tsx
+        ├── types.ts
+        ├── hooks/
+        │   └── useSimulation.ts
+        └── components/
+            ├── SimulationCanvas.tsx
+            └── ControlPanel.tsx
+```
 
 ## Environment Variables
 
-```bash
-# API
-REDIS_URL=redis:6379
-PORT=8080
-WORKER_COUNT=2
-
-# Worker
-REDIS_URL=redis:6379
-WORKER_ID=worker-1
-```
+The backend accepts:
+- `PORT`: Server port (default: 8080)
 
 ## Health Checks
 
-- `/health` - API health endpoint
-- Redis PING
-- Worker heartbeats via Redis
+- Backend: `GET /health` returns `{"status":"ok","tick":N,"clients":N}`
+- Stats: `GET /api/stats` returns simulation statistics
+- Config: `GET /api/config` returns current configuration
 
----
+## Nginx Routes
 
-*Details to be filled in as implementation progresses*
+| Path | Destination | Notes |
+|------|-------------|-------|
+| `/api/*` | backend:8080 | REST API |
+| `/ws` | backend:8080 | WebSocket (upgraded) |
+| `/health` | backend:8080 | Health check |
+| `/*` | frontend:80 | Static files |
