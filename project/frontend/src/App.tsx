@@ -24,6 +24,7 @@ function App() {
   } = useSimulation();
 
   const [selectedCreature, setSelectedCreature] = useState<SerializedCreature | null>(null);
+  const [colorByGeneration, setColorByGeneration] = useState(false);
 
   // Update selected creature with current state (track it as it moves)
   useEffect(() => {
@@ -65,6 +66,9 @@ function App() {
         break;
       case 'escape':
         setSelectedCreature(null);
+        break;
+      case 'c':
+        setColorByGeneration(prev => !prev);
         break;
     }
   }, [paused, pause, resume, reset, changeSpeed]);
@@ -109,6 +113,7 @@ function App() {
               height={worldHeight}
               selectedCreature={selectedCreature}
               onSelectCreature={setSelectedCreature}
+              colorByGeneration={colorByGeneration}
             />
             <MiniMap
               state={state}
@@ -161,7 +166,7 @@ function App() {
         Watch artificial creatures evolve in real-time. Click to inspect creatures.
         <br />
         <span style={{ color: '#888' }}>
-          Shortcuts: Space=Pause, R=Reset, 1-4=Speed, Esc=Deselect
+          Shortcuts: Space=Pause, R=Reset, 1-4=Speed, C=Color Mode, Esc=Deselect
         </span>
       </footer>
     </div>

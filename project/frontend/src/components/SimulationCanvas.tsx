@@ -7,6 +7,15 @@ interface Props {
   height: number;
   selectedCreature: SerializedCreature | null;
   onSelectCreature: (creature: SerializedCreature | null) => void;
+  colorByGeneration?: boolean;
+}
+
+// Convert generation to color (blue = young generations, red = old generations)
+function generationToColor(generation: number, maxGeneration: number): string {
+  const ratio = Math.min(generation / Math.max(maxGeneration, 1), 1);
+  // HSL interpolation from blue (240) to red (0)
+  const hue = 240 - ratio * 240;
+  return `hsl(${hue}, 80%, 50%)`;
 }
 
 // Trail configuration
@@ -25,7 +34,7 @@ interface Particle {
   size: number;
 }
 
-export function SimulationCanvas({ state, width, height, selectedCreature, onSelectCreature }: Props) {
+export function SimulationCanvas({ state, width, height, selectedCreature, onSelectCreature, colorByGeneration = false }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trailsRef = useRef<Map<string, Array<{x: number, y: number}>>>(new Map());
   const prevCreatureIdsRef = useRef<Set<string>>(new Set());
@@ -182,6 +191,7 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
     }
 
     // Draw creature trails
+    const maxGen = state.stats.maxGeneration;
     for (const creature of state.creatures) {
       const trail = trailsRef.current.get(creature.id);
       if (trail && trail.length > 1) {
@@ -190,7 +200,10 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
         for (let i = 1; i < trail.length; i++) {
           ctx.lineTo(trail[i].x, trail[i].y);
         }
-        ctx.strokeStyle = creature.color.replace('rgb', 'rgba').replace(')', `, ${TRAIL_OPACITY})`);
+        const trailColor = colorByGeneration
+          ? generationToColor(creature.generation, maxGen).replace('hsl', 'hsla').replace(')', `, ${TRAIL_OPACITY})`)
+          : creature.color.replace('rgb', 'rgba').replace(')', `, ${TRAIL_OPACITY})`);
+        ctx.strokeStyle = trailColor;
         ctx.lineWidth = creature.size * 0.5;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -235,11 +248,17 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
     const oldestAge = Math.max(...state.creatures.map(c => c.age));
 
     // Draw creatures
+    const maxGeneration = state.stats.maxGeneration;
     for (const creature of state.creatures) {
-      const { x, y, angle, size, color, energy, id, age } = creature;
+      const { x, y, angle, size, color, energy, id, age, generation } = creature;
       const isSelected = selectedCreature?.id === id;
       const isNewborn = age < 60; // Young creature (1 second old)
       const isOldest = age === oldestAge && oldestAge > 300; // Only show if somewhat old
+
+      // Use generation-based color if enabled
+      const displayColor = colorByGeneration
+        ? generationToColor(generation, maxGeneration)
+        : color;
 
       // Energy-based opacity
       const opacity = 0.5 + (energy / 100) * 0.5;
@@ -284,7 +303,11 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       // Body (elongated oval pointing in direction)
       ctx.beginPath();
       ctx.ellipse(0, 0, size * 1.3, size * 0.8, 0, 0, Math.PI * 2);
-      ctx.fillStyle = color.replace('rgb', 'rgba').replace(')', `, ${opacity})`);
+      // Handle both rgb() and hsl() color formats
+      const bodyColor = displayColor.startsWith('hsl')
+        ? displayColor.replace('hsl', 'hsla').replace(')', `, ${opacity})`)
+        : displayColor.replace('rgb', 'rgba').replace(')', `, ${opacity})`);
+      ctx.fillStyle = bodyColor;
       ctx.fill();
 
       // Direction indicator (front point)
@@ -293,7 +316,10 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       ctx.lineTo(size * 0.8, -size * 0.5);
       ctx.lineTo(size * 0.8, size * 0.5);
       ctx.closePath();
-      ctx.fillStyle = color.replace('rgb', 'rgba').replace(')', `, ${opacity * 0.8})`);
+      const pointColor = displayColor.startsWith('hsl')
+        ? displayColor.replace('hsl', 'hsla').replace(')', `, ${opacity * 0.8})`)
+        : displayColor.replace('rgb', 'rgba').replace(')', `, ${opacity * 0.8})`);
+      ctx.fillStyle = pointColor;
       ctx.fill();
 
       // Energy bar
@@ -331,7 +357,23 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
     ctx.fillText(`Population: ${state.creatures.length}`, 10, 40);
     ctx.fillText(`Food: ${state.food.length}`, 10, 60);
     ctx.fillText(`Max Gen: ${state.stats.maxGeneration}`, 10, 80);
-  }, [state, width, height, selectedCreature]);
+
+    // Color mode indicator
+    if (colorByGeneration) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillRect(width - 150, 10, 140, 30);
+      ctx.fillStyle = '#fff';
+      ctx.font = '11px monospace';
+      ctx.fillText('Color: Generation', width - 145, 30);
+      // Mini legend
+      const legendWidth = 60;
+      const legendX = width - 75;
+      for (let i = 0; i < legendWidth; i++) {
+        ctx.fillStyle = generationToColor(i, legendWidth);
+        ctx.fillRect(legendX + i, 32, 1, 4);
+      }
+    }
+  }, [state, width, height, selectedCreature, colorByGeneration]);
 
   return (
     <canvas
