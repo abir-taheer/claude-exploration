@@ -78,6 +78,30 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [handleKeyPress]);
 
+  // Auto-pause when tab is hidden (save resources)
+  useEffect(() => {
+    let wasRunning = false;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab became hidden - pause if running
+        if (!paused) {
+          wasRunning = true;
+          pause();
+        }
+      } else {
+        // Tab became visible - resume if was running before
+        if (wasRunning) {
+          wasRunning = false;
+          resume();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [paused, pause, resume]);
+
   const worldWidth = state?.config.width || 800;
   const worldHeight = state?.config.height || 600;
 
