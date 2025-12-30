@@ -350,11 +350,26 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       ctx.restore();
     }
 
+    // Calculate population breakdown by diet type
+    const herbivores = state.creatures.filter(c => c.dietType === 'herbivore').length;
+    const carnivores = state.creatures.filter(c => c.dietType === 'carnivore').length;
+    const omnivores = state.creatures.filter(c => c.dietType === 'omnivore').length;
+
     // Draw stats overlay
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.font = '14px monospace';
     ctx.fillText(`Tick: ${state.tick}`, 10, 20);
     ctx.fillText(`Population: ${state.creatures.length}`, 10, 40);
+
+    // Diet breakdown with colors
+    ctx.fillStyle = '#50cc50';
+    ctx.fillText(`  🌱 ${herbivores}`, 120, 40);
+    ctx.fillStyle = '#cc5050';
+    ctx.fillText(`🔴 ${carnivores}`, 170, 40);
+    ctx.fillStyle = '#aa50aa';
+    ctx.fillText(`🟣 ${omnivores}`, 220, 40);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.fillText(`Food: ${state.food.length}`, 10, 60);
     ctx.fillText(`Max Gen: ${state.stats.maxGeneration}`, 10, 80);
 
