@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { SerializedState, WorldConfig, ServerMessage } from '../types';
+import type { SerializedState, WorldConfig, ServerMessage, HistoryPoint } from '../types';
 
 // Construct WebSocket URL dynamically based on current host
 function getWebSocketUrl(): string {
@@ -21,6 +21,8 @@ export function useSimulation() {
   const [config, setConfig] = useState<WorldConfig | null>(null);
   const [connected, setConnected] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [history, setHistory] = useState<HistoryPoint[]>([]);
+  const [speed, setSpeed] = useState(1);
   const wsRef = useRef<WebSocket | null>(null);
 
   // Connect to WebSocket
@@ -54,6 +56,13 @@ export function useSimulation() {
               break;
             case 'reset':
               // State will be sent with next tick
+              setHistory([]);
+              break;
+            case 'history':
+              setHistory(message.data as HistoryPoint[]);
+              break;
+            case 'speed':
+              setSpeed(message.data as number);
               break;
           }
         } catch (error) {
@@ -96,15 +105,19 @@ export function useSimulation() {
   const resume = useCallback(() => send('resume'), [send]);
   const reset = useCallback((newConfig?: Partial<WorldConfig>) => send('reset', newConfig), [send]);
   const updateConfig = useCallback((updates: Partial<WorldConfig>) => send('updateConfig', updates), [send]);
+  const changeSpeed = useCallback((newSpeed: number) => send('setSpeed', newSpeed), [send]);
 
   return {
     state,
     config,
     connected,
     paused,
+    history,
+    speed,
     pause,
     resume,
     reset,
     updateConfig,
+    changeSpeed,
   };
 }

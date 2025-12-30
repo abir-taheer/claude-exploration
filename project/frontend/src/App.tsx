@@ -1,6 +1,7 @@
 import { useSimulation } from './hooks/useSimulation';
 import { SimulationCanvas } from './components/SimulationCanvas';
 import { ControlPanel } from './components/ControlPanel';
+import { HistoryGraph } from './components/HistoryGraph';
 
 function App() {
   const {
@@ -8,10 +9,13 @@ function App() {
     config,
     connected,
     paused,
+    history,
+    speed,
     pause,
     resume,
     reset,
     updateConfig,
+    changeSpeed,
   } = useSimulation();
 
   const worldWidth = state?.config.width || 800;
@@ -30,6 +34,7 @@ function App() {
         color: 'white',
         fontFamily: 'monospace',
         marginBottom: '20px',
+        fontSize: '24px',
       }}>
         EvoSim - Evolutionary Simulation
       </h1>
@@ -39,21 +44,30 @@ function App() {
         gap: '20px',
         alignItems: 'flex-start',
       }}>
-        <SimulationCanvas
-          state={state}
-          width={worldWidth}
-          height={worldHeight}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <SimulationCanvas
+            state={state}
+            width={worldWidth}
+            height={worldHeight}
+          />
+          <HistoryGraph
+            history={history}
+            width={worldWidth}
+            height={120}
+          />
+        </div>
 
         <ControlPanel
           config={config}
           stats={state?.stats || null}
           paused={paused}
           connected={connected}
+          speed={speed}
           onPause={pause}
           onResume={resume}
           onReset={reset}
           onUpdateConfig={updateConfig}
+          onChangeSpeed={changeSpeed}
         />
       </div>
 
@@ -62,8 +76,9 @@ function App() {
         color: '#666',
         fontFamily: 'monospace',
         fontSize: '12px',
+        textAlign: 'center',
       }}>
-        Watch artificial creatures evolve in real-time. Adjust parameters to influence selection pressures.
+        Watch artificial creatures evolve in real-time. Blue line = Population, Orange line = Generation.
       </footer>
     </div>
   );

@@ -56,7 +56,15 @@ export interface SerializedState {
   };
 }
 
+export interface HistoryPoint {
+  tick: number;
+  population: number;
+  avgSpeed: number;
+  avgSize: number;
+  maxGeneration: number;
+}
+
 export interface ServerMessage {
-  type: 'state' | 'config' | 'stats' | 'paused' | 'resumed' | 'reset';
-  data?: SerializedState | WorldConfig | WorldStats;
+  type: 'state' | 'config' | 'stats' | 'paused' | 'resumed' | 'reset' | 'history' | 'speed';
+  data?: SerializedState | WorldConfig | WorldStats | HistoryPoint[] | number;
 }

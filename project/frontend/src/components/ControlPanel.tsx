@@ -5,10 +5,12 @@ interface Props {
   stats: WorldStats | null;
   paused: boolean;
   connected: boolean;
+  speed: number;
   onPause: () => void;
   onResume: () => void;
   onReset: () => void;
   onUpdateConfig: (updates: Partial<WorldConfig>) => void;
+  onChangeSpeed: (speed: number) => void;
 }
 
 export function ControlPanel({
@@ -16,10 +18,12 @@ export function ControlPanel({
   stats,
   paused,
   connected,
+  speed,
   onPause,
   onResume,
   onReset,
   onUpdateConfig,
+  onChangeSpeed,
 }: Props) {
   if (!config) return null;
 
@@ -63,6 +67,25 @@ export function ControlPanel({
         <button onClick={onReset} style={buttonStyle}>
           Reset
         </button>
+      </div>
+
+      {/* Speed Controls */}
+      <div style={{ marginBottom: '16px' }}>
+        <h3 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>Speed: {speed}x</h3>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {[1, 2, 4, 8].map(s => (
+            <button
+              key={s}
+              onClick={() => onChangeSpeed(s)}
+              style={{
+                ...speedButtonStyle,
+                backgroundColor: speed === s ? '#3366ff' : '#333',
+              }}
+            >
+              {s}x
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Stats */}
@@ -173,6 +196,17 @@ const buttonStyle: React.CSSProperties = {
   color: 'white',
   border: 'none',
   padding: '8px 16px',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  fontFamily: 'monospace',
+  flex: 1,
+};
+
+const speedButtonStyle: React.CSSProperties = {
+  backgroundColor: '#333',
+  color: 'white',
+  border: 'none',
+  padding: '6px 12px',
   borderRadius: '4px',
   cursor: 'pointer',
   fontFamily: 'monospace',

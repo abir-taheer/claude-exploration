@@ -87,3 +87,16 @@ export interface WorldStats {
   oldestCreature: number;
   maxGeneration: number;
 }
+
+export interface HistoryPoint {
+  tick: number;
+  population: number;
+  avgSpeed: number;
+  avgSize: number;
+  maxGeneration: number;
+}
+
+export interface SimulationHistory {
+  points: HistoryPoint[];
+  maxPoints: number;
+}

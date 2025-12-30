@@ -4,11 +4,12 @@ import express from 'express';
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import cors from 'cors';
-import { createWorld, createDefaultConfig, simulateTick, serializeState, WorldState, WorldConfig } from '../simulation';
+import { createWorld, createDefaultConfig, simulateTick, serializeState, WorldState, WorldConfig, HistoryPoint } from '../simulation';
 
 const PORT = process.env.PORT || 8080;
-const TICK_RATE = 60; // Target 60 FPS
-const TICK_INTERVAL = 1000 / TICK_RATE;
+const BASE_TICK_RATE = 60; // Target 60 FPS
+const HISTORY_INTERVAL = 30; // Record history every 30 ticks (0.5 seconds)
+const MAX_HISTORY_POINTS = 500; // Keep last ~4 minutes of history
 
 // Create Express app
 const app = express();
@@ -25,6 +26,8 @@ const wss = new WebSocketServer({ server, path: '/ws' });
 let world: WorldState;
 let isRunning = true;
 let tickInterval: ReturnType<typeof setInterval> | null = null;
+let simulationSpeed = 1; // 1x, 2x, 4x speed multiplier
+let history: HistoryPoint[] = [];
 
 // Connected clients
 const clients = new Set<WebSocket>();
@@ -33,7 +36,25 @@ const clients = new Set<WebSocket>();
 function initWorld(config?: Partial<WorldConfig>) {
   const defaultConfig = createDefaultConfig();
   world = createWorld({ ...defaultConfig, ...config });
+  history = []; // Clear history on reset
   console.log(`World initialized with ${world.creatures.length} creatures and ${world.food.length} food`);
+}
+
+// Record history point
+function recordHistory() {
+  if (world.tick % HISTORY_INTERVAL === 0) {
+    const point: HistoryPoint = {
+      tick: world.tick,
+      population: world.stats.currentPopulation,
+      avgSpeed: world.stats.averageSpeed,
+      avgSize: world.stats.averageSize,
+      maxGeneration: world.stats.maxGeneration,
+    };
+    history.push(point);
+    if (history.length > MAX_HISTORY_POINTS) {
+      history.shift();
+    }
+  }
 }
 
 // Broadcast state to all clients
@@ -54,18 +75,24 @@ function broadcastState() {
 function runSimulation() {
   if (!isRunning) return;
 
-  simulateTick(world);
+  // Run multiple ticks based on speed multiplier
+  for (let i = 0; i < simulationSpeed; i++) {
+    simulateTick(world);
+    recordHistory();
+
+    // Respawn if extinction
+    if (world.creatures.length === 0) {
+      console.log('Extinction event! Respawning creatures...');
+      initWorld(world.config);
+      break;
+    }
+  }
+
   broadcastState();
 
   // Log stats periodically
   if (world.tick % 300 === 0) {
     console.log(`Tick ${world.tick}: ${world.stats.currentPopulation} creatures, gen ${world.stats.maxGeneration}`);
-  }
-
-  // Respawn if extinction
-  if (world.creatures.length === 0) {
-    console.log('Extinction event! Respawning creatures...');
-    initWorld(world.config);
   }
 }
 
@@ -73,8 +100,9 @@ function runSimulation() {
 function startSimulation() {
   if (tickInterval) return;
   isRunning = true;
-  tickInterval = setInterval(runSimulation, TICK_INTERVAL);
-  console.log(`Simulation started at ${TICK_RATE} FPS`);
+  const tickInterval_ms = 1000 / BASE_TICK_RATE;
+  tickInterval = setInterval(runSimulation, tickInterval_ms);
+  console.log(`Simulation started at ${BASE_TICK_RATE} FPS (${simulationSpeed}x speed)`);
 }
 
 // Stop simulation loop
@@ -96,6 +124,8 @@ wss.on('connection', (ws) => {
   const state = serializeState(world);
   ws.send(JSON.stringify({ type: 'state', data: state }));
   ws.send(JSON.stringify({ type: 'config', data: world.config }));
+  ws.send(JSON.stringify({ type: 'history', data: history }));
+  ws.send(JSON.stringify({ type: 'speed', data: simulationSpeed }));
 
   // Handle messages from client
   ws.on('message', (message) => {
@@ -148,6 +178,19 @@ function handleClientMessage(ws: WebSocket, message: { type: string; data?: unkn
       ws.send(JSON.stringify({ type: 'stats', data: world.stats }));
       break;
 
+    case 'setSpeed':
+      const newSpeed = Number(message.data);
+      if ([1, 2, 4, 8].includes(newSpeed)) {
+        simulationSpeed = newSpeed;
+        broadcast({ type: 'speed', data: simulationSpeed });
+        console.log(`Speed set to ${simulationSpeed}x`);
+      }
+      break;
+
+    case 'getHistory':
+      ws.send(JSON.stringify({ type: 'history', data: history }));
+      break;
+
     default:
       console.log('Unknown message type:', message.type);
   }
@@ -170,6 +213,25 @@ app.get('/health', (req, res) => {
 
 app.get('/api/stats', (req, res) => {
   res.json(world.stats);
+});
+
+app.get('/api/history', (req, res) => {
+  res.json(history);
+});
+
+app.get('/api/speed', (req, res) => {
+  res.json({ speed: simulationSpeed });
+});
+
+app.post('/api/speed', (req, res) => {
+  const newSpeed = Number(req.body.speed);
+  if ([1, 2, 4, 8].includes(newSpeed)) {
+    simulationSpeed = newSpeed;
+    broadcast({ type: 'speed', data: simulationSpeed });
+    res.json({ speed: simulationSpeed });
+  } else {
+    res.status(400).json({ error: 'Speed must be 1, 2, 4, or 8' });
+  }
 });
 
 app.get('/api/config', (req, res) => {
