@@ -238,9 +238,19 @@ export function move(
   while (creature.angle > Math.PI) creature.angle -= Math.PI * 2;
   while (creature.angle < -Math.PI) creature.angle += Math.PI * 2;
 
+  // Age-based speed reduction (creatures slow down as they age)
+  // Full speed until age 600 (10 sec), gradual decline to 70% by age 1800 (30 sec)
+  let ageMultiplier = 1.0;
+  const youngAge = 600;
+  const oldAge = 1800;
+  if (creature.age > youngAge) {
+    const ageProgress = Math.min(1, (creature.age - youngAge) / (oldAge - youngAge));
+    ageMultiplier = 1.0 - (ageProgress * 0.3); // Reduce to 70% at max
+  }
+
   // Calculate velocity with minimum speed to prevent standing still
   const minSpeed = 0.3; // Creatures always move forward
-  const speed = Math.max(minSpeed, speedMultiplier) * creature.genome.maxSpeed;
+  const speed = Math.max(minSpeed, speedMultiplier) * creature.genome.maxSpeed * ageMultiplier;
   creature.velocity.x = Math.cos(creature.angle) * speed;
   creature.velocity.y = Math.sin(creature.angle) * speed;
 
