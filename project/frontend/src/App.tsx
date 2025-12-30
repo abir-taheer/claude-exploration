@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSimulation } from './hooks/useSimulation';
 import { SimulationCanvas } from './components/SimulationCanvas';
 import { ControlPanel } from './components/ControlPanel';
@@ -36,6 +36,42 @@ function App() {
       }
     }
   }, [state, selectedCreature?.id]);
+
+  // Keyboard shortcuts
+  const handleKeyPress = useCallback((e: KeyboardEvent) => {
+    // Don't trigger if typing in an input
+    if (e.target instanceof HTMLInputElement) return;
+
+    switch (e.key.toLowerCase()) {
+      case ' ':
+        e.preventDefault();
+        paused ? resume() : pause();
+        break;
+      case 'r':
+        reset();
+        break;
+      case '1':
+        changeSpeed(1);
+        break;
+      case '2':
+        changeSpeed(2);
+        break;
+      case '3':
+        changeSpeed(4);
+        break;
+      case '4':
+        changeSpeed(8);
+        break;
+      case 'escape':
+        setSelectedCreature(null);
+        break;
+    }
+  }, [paused, pause, resume, reset, changeSpeed]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [handleKeyPress]);
 
   const worldWidth = state?.config.width || 800;
   const worldHeight = state?.config.height || 600;
@@ -107,12 +143,16 @@ function App() {
         marginTop: '20px',
         color: '#666',
         fontFamily: 'monospace',
-        fontSize: '12px',
+        fontSize: '11px',
         textAlign: 'center',
-        maxWidth: '800px',
+        maxWidth: '900px',
+        lineHeight: '1.6',
       }}>
-        Watch artificial creatures evolve in real-time. Click creatures to inspect their genome.
-        Blue line = Population, Orange line = Generation.
+        Watch artificial creatures evolve in real-time. Click to inspect creatures.
+        <br />
+        <span style={{ color: '#888' }}>
+          Shortcuts: Space=Pause, R=Reset, 1-4=Speed, Esc=Deselect
+        </span>
       </footer>
     </div>
   );
