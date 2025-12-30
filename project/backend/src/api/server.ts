@@ -4,7 +4,7 @@ import express from 'express';
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import cors from 'cors';
-import { createWorld, createDefaultConfig, simulateTick, serializeState, WorldState, WorldConfig, HistoryPoint } from '../simulation';
+import { createWorld, createDefaultConfig, simulateTick, serializeState, WorldState, WorldConfig, HistoryPoint, DietType } from '../simulation';
 
 const PORT = process.env.PORT || 8080;
 const BASE_TICK_RATE = 60; // Target 60 FPS
@@ -43,12 +43,20 @@ function initWorld(config?: Partial<WorldConfig>) {
 // Record history point
 function recordHistory() {
   if (world.tick % HISTORY_INTERVAL === 0) {
+    // Count creatures by diet type
+    const herbivores = world.creatures.filter(c => c.genome.dietType === DietType.Herbivore).length;
+    const carnivores = world.creatures.filter(c => c.genome.dietType === DietType.Carnivore).length;
+    const omnivores = world.creatures.filter(c => c.genome.dietType === DietType.Omnivore).length;
+
     const point: HistoryPoint = {
       tick: world.tick,
       population: world.stats.currentPopulation,
       avgSpeed: world.stats.averageSpeed,
       avgSize: world.stats.averageSize,
       maxGeneration: world.stats.maxGeneration,
+      herbivores,
+      carnivores,
+      omnivores,
     };
     history.push(point);
     if (history.length > MAX_HISTORY_POINTS) {

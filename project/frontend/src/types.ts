@@ -69,6 +69,9 @@ export interface HistoryPoint {
   avgSpeed: number;
   avgSize: number;
   maxGeneration: number;
+  herbivores: number;
+  carnivores: number;
+  omnivores: number;
 }
 
 export interface ServerMessage {

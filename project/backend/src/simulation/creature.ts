@@ -213,15 +213,21 @@ export function move(
   worldWidth: number,
   worldHeight: number
 ): void {
-  // Apply turn
-  creature.angle += decision.turn * creature.genome.turnRate;
+  // Add random noise to prevent getting stuck in loops
+  // Noise decreases with higher speed (moving creatures explore naturally)
+  const noiseAmount = 0.1 * (1 - decision.speed);
+  const turnNoise = (Math.random() - 0.5) * noiseAmount;
+
+  // Apply turn with noise
+  creature.angle += decision.turn * creature.genome.turnRate + turnNoise;
 
   // Normalize angle
   while (creature.angle > Math.PI) creature.angle -= Math.PI * 2;
   while (creature.angle < -Math.PI) creature.angle += Math.PI * 2;
 
-  // Calculate velocity
-  const speed = decision.speed * creature.genome.maxSpeed;
+  // Calculate velocity with minimum speed to prevent standing still
+  const minSpeed = 0.2; // Creatures always move at least a little
+  const speed = Math.max(minSpeed, decision.speed) * creature.genome.maxSpeed;
   creature.velocity.x = Math.cos(creature.angle) * speed;
   creature.velocity.y = Math.sin(creature.angle) * speed;
 

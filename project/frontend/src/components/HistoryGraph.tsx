@@ -50,13 +50,14 @@ export function HistoryGraph({ history, width, height }: Props) {
     ctx.textAlign = 'center';
     ctx.fillText('Time', width / 2, height - 5);
 
-    // Draw population line (blue)
-    ctx.strokeStyle = '#4488ff';
+    // Draw herbivore line (green)
+    ctx.strokeStyle = '#44cc44';
     ctx.lineWidth = 2;
     ctx.beginPath();
     history.forEach((point, i) => {
       const x = padding.left + (i / (history.length - 1)) * graphWidth;
-      const y = height - padding.bottom - (point.population / maxPop) * graphHeight;
+      const herbCount = point.herbivores ?? 0;
+      const y = height - padding.bottom - (herbCount / maxPop) * graphHeight;
       if (i === 0) {
         ctx.moveTo(x, y);
       } else {
@@ -65,9 +66,42 @@ export function HistoryGraph({ history, width, height }: Props) {
     });
     ctx.stroke();
 
-    // Draw generation line (orange)
-    ctx.strokeStyle = '#ff8844';
+    // Draw carnivore line (red)
+    ctx.strokeStyle = '#cc4444';
     ctx.lineWidth = 2;
+    ctx.beginPath();
+    history.forEach((point, i) => {
+      const x = padding.left + (i / (history.length - 1)) * graphWidth;
+      const carnCount = point.carnivores ?? 0;
+      const y = height - padding.bottom - (carnCount / maxPop) * graphHeight;
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    });
+    ctx.stroke();
+
+    // Draw omnivore line (purple)
+    ctx.strokeStyle = '#aa44aa';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    history.forEach((point, i) => {
+      const x = padding.left + (i / (history.length - 1)) * graphWidth;
+      const omniCount = point.omnivores ?? 0;
+      const y = height - padding.bottom - (omniCount / maxPop) * graphHeight;
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    });
+    ctx.stroke();
+
+    // Draw generation line (orange dashed)
+    ctx.strokeStyle = '#ff8844';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
     ctx.beginPath();
     history.forEach((point, i) => {
       const x = padding.left + (i / (history.length - 1)) * graphWidth;
@@ -79,19 +113,31 @@ export function HistoryGraph({ history, width, height }: Props) {
       }
     });
     ctx.stroke();
+    ctx.setLineDash([]);
 
     // Legend
-    ctx.fillStyle = '#4488ff';
-    ctx.fillRect(width - 100, 8, 12, 12);
-    ctx.fillStyle = '#fff';
     ctx.font = '10px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('Population', width - 85, 17);
+
+    ctx.fillStyle = '#44cc44';
+    ctx.fillRect(width - 95, 6, 10, 10);
+    ctx.fillStyle = '#fff';
+    ctx.fillText('🌱', width - 82, 15);
+
+    ctx.fillStyle = '#cc4444';
+    ctx.fillRect(width - 65, 6, 10, 10);
+    ctx.fillStyle = '#fff';
+    ctx.fillText('🔴', width - 52, 15);
+
+    ctx.fillStyle = '#aa44aa';
+    ctx.fillRect(width - 35, 6, 10, 10);
+    ctx.fillStyle = '#fff';
+    ctx.fillText('🟣', width - 22, 15);
 
     ctx.fillStyle = '#ff8844';
-    ctx.fillRect(width - 100, 24, 12, 12);
+    ctx.fillRect(width - 95, 22, 10, 10);
     ctx.fillStyle = '#fff';
-    ctx.fillText('Generation', width - 85, 33);
+    ctx.fillText('Gen', width - 82, 31);
 
   }, [history, width, height]);
 
