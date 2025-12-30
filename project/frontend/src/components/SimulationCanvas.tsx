@@ -1,14 +1,44 @@
-import { useRef, useEffect } from 'react';
-import type { SerializedState } from '../types';
+import { useRef, useEffect, useCallback } from 'react';
+import type { SerializedState, SerializedCreature } from '../types';
 
 interface Props {
   state: SerializedState | null;
   width: number;
   height: number;
+  selectedCreature: SerializedCreature | null;
+  onSelectCreature: (creature: SerializedCreature | null) => void;
 }
 
-export function SimulationCanvas({ state, width, height }: Props) {
+export function SimulationCanvas({ state, width, height, selectedCreature, onSelectCreature }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Handle click to select creature
+  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!state) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // Find closest creature within click radius
+    let closest: SerializedCreature | null = null;
+    let closestDist = 30; // Max click distance
+
+    for (const creature of state.creatures) {
+      const dx = creature.x - x;
+      const dy = creature.y - y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = creature;
+      }
+    }
+
+    onSelectCreature(closest);
+  }, [state, onSelectCreature]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -60,7 +90,8 @@ export function SimulationCanvas({ state, width, height }: Props) {
 
     // Draw creatures
     for (const creature of state.creatures) {
-      const { x, y, angle, size, color, energy } = creature;
+      const { x, y, angle, size, color, energy, id } = creature;
+      const isSelected = selectedCreature?.id === id;
 
       // Energy-based opacity
       const opacity = 0.5 + (energy / 100) * 0.5;
@@ -69,6 +100,15 @@ export function SimulationCanvas({ state, width, height }: Props) {
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(angle);
+
+      // Selection highlight
+      if (isSelected) {
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 2, 0, Math.PI * 2);
+        ctx.strokeStyle = '#ffff00';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
 
       // Body (elongated oval pointing in direction)
       ctx.beginPath();
@@ -111,17 +151,19 @@ export function SimulationCanvas({ state, width, height }: Props) {
     ctx.fillText(`Population: ${state.creatures.length}`, 10, 40);
     ctx.fillText(`Food: ${state.food.length}`, 10, 60);
     ctx.fillText(`Max Gen: ${state.stats.maxGeneration}`, 10, 80);
-  }, [state, width, height]);
+  }, [state, width, height, selectedCreature]);
 
   return (
     <canvas
       ref={canvasRef}
       width={width}
       height={height}
+      onClick={handleClick}
       style={{
         border: '2px solid #333',
         borderRadius: '8px',
         display: 'block',
+        cursor: 'crosshair',
       }}
     />
   );
