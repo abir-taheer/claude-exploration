@@ -91,11 +91,18 @@ The network weights are encoded in the creature's genome and evolve over generat
 - Track age and total food eaten
 - Watch stats update in real-time
 
-## Controls
+## Keyboard Shortcuts
 
-- **Pause/Resume**: Stop or continue the simulation
-- **Reset**: Start fresh with random creatures
-- **Speed**: 1x, 2x, 4x, 8x simulation speed
+| Key | Action |
+|-----|--------|
+| Space | Pause/Resume simulation |
+| R | Reset with new random creatures |
+| 1-4 | Set speed (1x, 2x, 4x, 8x) |
+| C | Toggle generation-based color mode |
+| Escape | Deselect current creature |
+
+## Configuration Options
+
 - **Mutation Rate**: How often genes mutate (higher = more variation)
 - **Mutation Strength**: How much genes change when mutating
 - **Food Spawn Rate**: How quickly new food appears
