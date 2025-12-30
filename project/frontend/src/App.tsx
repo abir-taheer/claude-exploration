@@ -115,6 +115,7 @@ function App() {
               worldWidth={worldWidth}
               worldHeight={worldHeight}
               size={120}
+              selectedCreature={selectedCreature}
             />
           </div>
           <HistoryGraph

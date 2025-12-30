@@ -1,14 +1,15 @@
 import { useRef, useEffect } from 'react';
-import type { SerializedState } from '../types';
+import type { SerializedState, SerializedCreature } from '../types';
 
 interface Props {
   state: SerializedState | null;
   worldWidth: number;
   worldHeight: number;
   size?: number;
+  selectedCreature?: SerializedCreature | null;
 }
 
-export function MiniMap({ state, worldWidth, worldHeight, size = 150 }: Props) {
+export function MiniMap({ state, worldWidth, worldHeight, size = 150, selectedCreature }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const aspectRatio = worldWidth / worldHeight;
@@ -52,7 +53,26 @@ export function MiniMap({ state, worldWidth, worldHeight, size = 150 }: Props) {
       ctx.fillStyle = creature.color;
       ctx.fill();
     }
-  }, [state, mapWidth, mapHeight, scaleX, scaleY]);
+
+    // Highlight selected creature
+    if (selectedCreature) {
+      const x = selectedCreature.x * scaleX;
+      const y = selectedCreature.y * scaleY;
+
+      // Pulsing ring effect
+      ctx.beginPath();
+      ctx.arc(x, y, 6, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ffff00';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Inner dot
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffff00';
+      ctx.fill();
+    }
+  }, [state, mapWidth, mapHeight, scaleX, scaleY, selectedCreature]);
 
   if (!state) return null;
 
