@@ -69,4 +69,18 @@ Timestamped log of project activity.
 - Added mini-map overview with selected creature highlight
 - Added generation-based color mode (press C to toggle)
 - Added auto-pause when tab is hidden (saves CPU resources)
+- Added fullscreen mode (press F to toggle)
 - Updated README with keyboard shortcuts section
+
+### Major Feature: Predator-Prey Ecosystem
+- Added three diet types: Herbivore, Carnivore, Omnivore
+- Herbivores (green) eat plants, are numerous, vulnerable to predators
+- Carnivores (red) hunt other creatures, fewer but powerful
+- Omnivores (purple) eat both plants and smaller creatures
+- Extended neural network: 7 inputs -> 8 hidden -> 3 outputs
+- New inputs: prey angle/distance, predator angle
+- New output: attack decision
+- New genome traits: attackPower, defense
+- Diet types can evolve through mutation
+- Visual indicators: emoji icons in leaderboard, colors by diet type
+- Creature inspector shows diet type and kill count
