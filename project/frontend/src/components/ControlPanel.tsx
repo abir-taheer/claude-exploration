@@ -201,6 +201,19 @@ export function ControlPanel({
             Lower = longer lifespan
           </span>
         </label>
+
+        <label style={{ ...sliderLabelStyle, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input
+            type="checkbox"
+            checked={config.guaranteedHunting || false}
+            onChange={(e) => onUpdateConfig({ guaranteedHunting: e.target.checked })}
+            style={{ width: '16px', height: '16px' }}
+          />
+          Guaranteed Hunting
+          <span style={{ fontSize: '10px', color: '#888' }}>
+            (100% success rate)
+          </span>
+        </label>
       </div>
     </div>
   );

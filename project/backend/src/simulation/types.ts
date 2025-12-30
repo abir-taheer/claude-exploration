@@ -81,6 +81,7 @@ export interface WorldConfig {
   mutationRate: number;           // Probability of gene mutation
   mutationStrength: number;       // How much genes can change
   energyDrainMultiplier: number;  // Multiplier for all energy drain (lower = longer lifespan)
+  guaranteedHunting: boolean;     // If true, hunting always succeeds (no attack/defense roll)
 }
 
 export interface WorldState {

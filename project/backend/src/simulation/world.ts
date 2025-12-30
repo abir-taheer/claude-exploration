@@ -196,6 +196,7 @@ export function createDefaultConfig(): WorldConfig {
     mutationRate: 0.1,
     mutationStrength: 0.3,
     energyDrainMultiplier: 0.5, // Lower = longer lifespan (0.5 = half the normal drain)
+    guaranteedHunting: false,   // If true, hunting always succeeds
   };
 }
 
@@ -379,7 +380,7 @@ function findNearestPredator(
 }
 
 // Check if hunter catches prey (attack succeeds)
-function checkAttackSuccess(hunter: Creature, prey: Creature): boolean {
+function checkAttackSuccess(hunter: Creature, prey: Creature, guaranteedHunting: boolean): boolean {
   const attackDist = hunter.genome.size + prey.genome.size;
   const dist = Math.sqrt(
     Math.pow(hunter.position.x - prey.position.x, 2) +
@@ -387,6 +388,9 @@ function checkAttackSuccess(hunter: Creature, prey: Creature): boolean {
   );
 
   if (dist > attackDist) return false;
+
+  // If guaranteed hunting is enabled, skip the roll
+  if (guaranteedHunting) return true;
 
   // Attack roll: higher attack power vs higher defense
   const attackRoll = hunter.genome.attackPower * (0.5 + Math.random() * 0.5);
@@ -453,7 +457,7 @@ export function simulateTick(world: WorldState): {
 
     // Check for hunting (carnivores/omnivores with high attack output)
     if (decision.attack > 0.5 && nearestPrey && !deadIds.has(nearestPrey.prey.id)) {
-      if (checkAttackSuccess(creature, nearestPrey.prey)) {
+      if (checkAttackSuccess(creature, nearestPrey.prey, config.guaranteedHunting)) {
         // Successful hunt!
         const energyGained = nearestPrey.prey.energy * creature.genome.energyEfficiency * 0.5;
         creature.energy += energyGained;

@@ -50,6 +50,7 @@ export interface WorldConfig {
   mutationRate: number;
   mutationStrength: number;
   energyDrainMultiplier: number;
+  guaranteedHunting: boolean;
 }
 
 export interface SerializedHotspot {
