@@ -4,6 +4,7 @@ import { SimulationCanvas } from './components/SimulationCanvas';
 import { ControlPanel } from './components/ControlPanel';
 import { HistoryGraph } from './components/HistoryGraph';
 import { CreatureInspector } from './components/CreatureInspector';
+import { Leaderboard } from './components/Leaderboard';
 import type { SerializedCreature } from './types';
 
 function App() {
@@ -76,6 +77,11 @@ function App() {
             width={worldWidth}
             height={120}
           />
+          <Leaderboard
+            creatures={state?.creatures || []}
+            selectedId={selectedCreature?.id || null}
+            onSelect={setSelectedCreature}
+          />
         </div>
 
         <ControlPanel
@@ -103,8 +109,10 @@ function App() {
         fontFamily: 'monospace',
         fontSize: '12px',
         textAlign: 'center',
+        maxWidth: '800px',
       }}>
-        Watch artificial creatures evolve in real-time. Blue line = Population, Orange line = Generation.
+        Watch artificial creatures evolve in real-time. Click creatures to inspect their genome.
+        Blue line = Population, Orange line = Generation.
       </footer>
     </div>
   );
