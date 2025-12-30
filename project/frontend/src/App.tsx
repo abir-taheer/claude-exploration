@@ -5,6 +5,7 @@ import { ControlPanel } from './components/ControlPanel';
 import { HistoryGraph } from './components/HistoryGraph';
 import { CreatureInspector } from './components/CreatureInspector';
 import { Leaderboard } from './components/Leaderboard';
+import { MiniMap } from './components/MiniMap';
 import type { SerializedCreature } from './types';
 
 function App() {
@@ -101,13 +102,21 @@ function App() {
         position: 'relative',
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <SimulationCanvas
-            state={state}
-            width={worldWidth}
-            height={worldHeight}
-            selectedCreature={selectedCreature}
-            onSelectCreature={setSelectedCreature}
-          />
+          <div style={{ position: 'relative' }}>
+            <SimulationCanvas
+              state={state}
+              width={worldWidth}
+              height={worldHeight}
+              selectedCreature={selectedCreature}
+              onSelectCreature={setSelectedCreature}
+            />
+            <MiniMap
+              state={state}
+              worldWidth={worldWidth}
+              worldHeight={worldHeight}
+              size={120}
+            />
+          </div>
           <HistoryGraph
             history={history}
             width={worldWidth}
