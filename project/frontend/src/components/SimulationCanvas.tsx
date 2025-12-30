@@ -88,11 +88,15 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       ctx.fill();
     }
 
+    // Find oldest creature
+    const oldestAge = Math.max(...state.creatures.map(c => c.age));
+
     // Draw creatures
     for (const creature of state.creatures) {
       const { x, y, angle, size, color, energy, id, age } = creature;
       const isSelected = selectedCreature?.id === id;
       const isNewborn = age < 60; // Young creature (1 second old)
+      const isOldest = age === oldestAge && oldestAge > 300; // Only show if somewhat old
 
       // Energy-based opacity
       const opacity = 0.5 + (energy / 100) * 0.5;
@@ -150,10 +154,19 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       ctx.fill();
 
       // Energy bar
-      ctx.rotate(-angle); // Reset rotation for energy bar
+      // Oldest creature crown indicator
+      ctx.rotate(-angle); // Reset rotation
+
+      if (isOldest) {
+        ctx.fillStyle = '#ffd700';
+        ctx.font = `${Math.max(12, size)}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.fillText('👑', 0, -size - 12);
+      }
+
       const barWidth = size * 2;
       const barHeight = 3;
-      const barY = -size - 8;
+      const barY = isOldest ? -size - 24 : -size - 8;
 
       // Background
       ctx.fillStyle = 'rgba(50, 50, 50, 0.5)';
