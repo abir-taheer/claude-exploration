@@ -186,6 +186,21 @@ export function ControlPanel({
             style={sliderStyle}
           />
         </label>
+
+        <label style={sliderLabelStyle}>
+          Lifespan (energy drain): {((config.energyDrainMultiplier || 0.5) * 100).toFixed(0)}%
+          <input
+            type="range"
+            min="10"
+            max="150"
+            value={(config.energyDrainMultiplier || 0.5) * 100}
+            onChange={(e) => onUpdateConfig({ energyDrainMultiplier: Number(e.target.value) / 100 })}
+            style={sliderStyle}
+          />
+          <span style={{ fontSize: '10px', color: '#888' }}>
+            Lower = longer lifespan
+          </span>
+        </label>
       </div>
     </div>
   );

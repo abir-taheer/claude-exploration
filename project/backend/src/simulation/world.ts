@@ -4,6 +4,7 @@ import { Creature, DietType, Food, WorldConfig, WorldState, WorldStats, Vector2D
 import {
   createRandomCreature,
   createCreature,
+  genomeToColor,
   getCreatureInput,
   think,
   move,
@@ -64,6 +65,7 @@ export function createDefaultConfig(): WorldConfig {
     reproductionCost: 40,
     mutationRate: 0.1,
     mutationStrength: 0.3,
+    energyDrainMultiplier: 0.5, // Lower = longer lifespan (0.5 = half the normal drain)
   };
 }
 
@@ -311,7 +313,7 @@ export function simulateTick(world: WorldState): {
     move(creature, decision, config.width, config.height);
 
     // Metabolize (energy drain)
-    metabolize(creature);
+    metabolize(creature, config.energyDrainMultiplier);
 
     // Check for hunting (carnivores/omnivores with high attack output)
     if (decision.attack > 0.5 && nearestPrey && !deadIds.has(nearestPrey.prey.id)) {
@@ -331,7 +333,9 @@ export function simulateTick(world: WorldState): {
     if (creature.genome.dietType !== DietType.Carnivore) {
       for (const f of food) {
         if (!foodEaten.includes(f) && checkFoodCollision(creature, f)) {
-          creature.energy += f.energy * creature.genome.energyEfficiency;
+          // Omnivores are less efficient at eating plants (jack of all trades)
+          const dietMultiplier = creature.genome.dietType === DietType.Omnivore ? 0.6 : 1.0;
+          creature.energy += f.energy * creature.genome.energyEfficiency * dietMultiplier;
           creature.energy = Math.min(100, creature.energy);
           creature.foodEaten++;
           foodEaten.push(f);
@@ -382,6 +386,34 @@ export function simulateTick(world: WorldState): {
 
   // Add newborn creatures
   creatures.push(...births);
+
+  // Diet diversity re-seeding: periodically check if any diet type is missing and re-introduce
+  // This happens every ~300 ticks (5 seconds) with a small chance to add a new creature
+  if (world.tick % 300 === 0 && creatures.length > 5) {
+    const herbivoreCount = creatures.filter(c => c.genome.dietType === DietType.Herbivore).length;
+    const carnivoreCount = creatures.filter(c => c.genome.dietType === DietType.Carnivore).length;
+    const omnivoreCount = creatures.filter(c => c.genome.dietType === DietType.Omnivore).length;
+
+    // If a diet type is completely missing or very rare, spawn one
+    if (herbivoreCount === 0 || (herbivoreCount < 3 && Math.random() < 0.3)) {
+      const newCreature = createRandomCreature(config.width, config.height);
+      newCreature.genome.dietType = DietType.Herbivore;
+      newCreature.color = genomeToColor(newCreature.genome);
+      creatures.push(newCreature);
+    }
+    if (carnivoreCount === 0 || (carnivoreCount < 2 && Math.random() < 0.2)) {
+      const newCreature = createRandomCreature(config.width, config.height);
+      newCreature.genome.dietType = DietType.Carnivore;
+      newCreature.color = genomeToColor(newCreature.genome);
+      creatures.push(newCreature);
+    }
+    if (omnivoreCount === 0 && Math.random() < 0.1) {
+      const newCreature = createRandomCreature(config.width, config.height);
+      newCreature.genome.dietType = DietType.Omnivore;
+      newCreature.color = genomeToColor(newCreature.genome);
+      creatures.push(newCreature);
+    }
+  }
 
   // Spawn new food
   if (food.length < config.maxFood && Math.random() < config.foodSpawnRate) {

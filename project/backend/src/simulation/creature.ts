@@ -20,7 +20,7 @@ function randomWeight(): number {
 }
 
 // Generate color from genome traits - now based on diet type
-function genomeToColor(genome: Genome): string {
+export function genomeToColor(genome: Genome): string {
   // Base color by diet type
   switch (genome.dietType) {
     case DietType.Herbivore:
@@ -249,9 +249,9 @@ export function move(
 }
 
 // Apply base metabolism drain
-export function metabolize(creature: Creature): void {
+export function metabolize(creature: Creature, drainMultiplier: number = 1.0): void {
   // Base drain + size penalty (bigger creatures need more energy)
   const sizePenalty = creature.genome.size * 0.01;
-  creature.energy -= creature.genome.baseDrain + sizePenalty;
+  creature.energy -= (creature.genome.baseDrain + sizePenalty) * drainMultiplier;
   creature.age++;
 }

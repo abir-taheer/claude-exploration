@@ -80,6 +80,7 @@ export interface WorldConfig {
   reproductionCost: number;       // Energy spent on reproduction
   mutationRate: number;           // Probability of gene mutation
   mutationStrength: number;       // How much genes can change
+  energyDrainMultiplier: number;  // Multiplier for all energy drain (lower = longer lifespan)
 }
 
 export interface WorldState {

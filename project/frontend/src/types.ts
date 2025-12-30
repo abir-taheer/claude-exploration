@@ -49,6 +49,7 @@ export interface WorldConfig {
   reproductionCost: number;
   mutationRate: number;
   mutationStrength: number;
+  energyDrainMultiplier: number;
 }
 
 export interface SerializedState {

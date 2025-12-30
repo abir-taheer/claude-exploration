@@ -163,8 +163,11 @@ function handleClientMessage(ws: WebSocket, message: { type: string; data?: unkn
       break;
 
     case 'reset':
+      console.log('Resetting world...');
       initWorld(message.data as Partial<WorldConfig>);
       broadcast({ type: 'reset' });
+      // Immediately broadcast new state after reset
+      broadcastState();
       break;
 
     case 'updateConfig':
