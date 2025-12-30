@@ -101,8 +101,18 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       ctx.translate(x, y);
       ctx.rotate(angle);
 
-      // Selection highlight
+      // Selection highlight and sense radius
       if (isSelected) {
+        // Sense radius circle
+        ctx.beginPath();
+        ctx.arc(0, 0, creature.senseRadius, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Selection ring
         ctx.beginPath();
         ctx.arc(0, 0, size * 2, 0, Math.PI * 2);
         ctx.strokeStyle = '#ffff00';

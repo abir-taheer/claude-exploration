@@ -9,6 +9,10 @@ export interface SerializedCreature {
   energy: number;
   color: string;
   generation: number;
+  senseRadius: number;
+  maxSpeed: number;
+  age: number;
+  foodEaten: number;
 }
 
 export interface SerializedFood {

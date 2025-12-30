@@ -266,6 +266,10 @@ export interface SerializedCreature {
   energy: number;
   color: string;
   generation: number;
+  senseRadius: number;
+  maxSpeed: number;
+  age: number;
+  foodEaten: number;
 }
 
 export interface SerializedFood {
@@ -298,6 +302,10 @@ export function serializeState(world: WorldState): SerializedState {
       energy: c.energy,
       color: c.color,
       generation: c.generation,
+      senseRadius: c.genome.senseRadius,
+      maxSpeed: c.genome.maxSpeed,
+      age: c.age,
+      foodEaten: c.foodEaten,
     })),
     food: world.food.map(f => ({
       id: f.id,
