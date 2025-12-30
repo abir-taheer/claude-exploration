@@ -63,7 +63,10 @@ Timestamped log of project activity.
 
 ### Additional Visual Polish
 - Added crown indicator for oldest creature
-- Added creature movement trails
-- Added death particles (red, falling)
-- Added food eating particles (green, floating up)
+- Added creature movement trails (fading path behind each creature)
+- Added death particles (red, falling with gravity)
+- Added food eating particles (green, floating upward)
 - Added mini-map overview with selected creature highlight
+- Added generation-based color mode (press C to toggle)
+- Added auto-pause when tab is hidden (saves CPU resources)
+- Updated README with keyboard shortcuts section
