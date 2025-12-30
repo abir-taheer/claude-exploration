@@ -81,13 +81,27 @@ The network weights are encoded in the creature's genome and evolve over generat
 - **Movement trails** showing where each creature has been
 - **Newborn glow** - white aura around recently born creatures
 - **Crown indicator** - golden crown above the oldest living creature
-- **Death particles** - red particles burst when creatures die
+- **Aging effects** - older creatures gradually slow down (70% speed at 30 seconds)
+- **Death particles** - colored particles burst when creatures die (matches creature color)
 - **Eating particles** - green particles float up when food is consumed
+- **Food hotspots** - subtle green zones where food spawns more frequently
+- **Event visualization** - pulsing circles show active events
+
+### Random Events
+The simulation features periodic random events that shake up the ecosystem:
+
+| Event | Description | Duration |
+|-------|-------------|----------|
+| 🌿 Food Bonanza | 15-30 bonus food spawns in one area | 3 seconds |
+| 🦋 Migration | 5-10 herbivores arrive as a group | 2 seconds |
+| 🔴 Predator Surge | 2-4 strong carnivores appear | Instant |
 
 ### Population History Graph
-- Track **population** and **generation** over time
-- Blue line shows population size
-- Orange line shows maximum generation reached
+- Track **population by diet type** over time
+- Green line: Herbivore population
+- Red line: Carnivore population
+- Purple line: Omnivore population
+- Orange dashed line: Maximum generation reached
 
 ### Leaderboard
 - See the **top 5 hunters** by food eaten
@@ -135,14 +149,18 @@ The network weights are encoded in the creature's genome and evolve over generat
 - **Food Spawn Rate**: How quickly new food appears
 - **Max Food**: Maximum food items in the world
 - **Reproduction Threshold**: Energy needed to reproduce
+- **Lifespan (Energy Drain)**: Controls how fast creatures lose energy (lower = longer lifespan)
+- **Guaranteed Hunting**: Toggle 100% hunt success rate for predators (default: off)
 
 ## Observing Evolution
 
 Over time, you'll notice:
-- Creatures becoming faster at finding food
-- Optimal sizes emerging (balance of visibility vs. energy cost)
-- Sensing radius adapting to food density
-- Neural networks developing food-seeking behaviors
+- Predator-prey dynamics (population oscillations between diet types)
+- Herbivores developing evasion behaviors to escape carnivores
+- Carnivores becoming faster and more accurate hunters
+- Optimal sizes emerging (bigger hunters vs. smaller, more efficient herbivores)
+- Sensing radius adapting to the current food/threat density
+- Neural networks developing food-seeking and hunting/fleeing behaviors
 
 ## Tech Stack
 
