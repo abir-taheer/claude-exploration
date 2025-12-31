@@ -386,6 +386,38 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
         ctx.fill();
       }
 
+      // Danger indicator for prey (red pulse when predator nearby)
+      if (creature.dietType === 'herbivore' || creature.dietType === 'omnivore') {
+        let inDanger = false;
+        for (const other of state.creatures) {
+          if (other.id === creature.id) continue;
+          const canBeHunted =
+            (other.dietType === 'carnivore') ||
+            (other.dietType === 'omnivore' && creature.dietType === 'herbivore' && other.size > creature.size);
+          if (!canBeHunted) continue;
+
+          const dx = other.x - x;
+          const dy = other.y - y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < creature.senseRadius * 0.7) {
+            inDanger = true;
+            break;
+          }
+        }
+
+        if (inDanger) {
+          const pulseIntensity = 0.3 + Math.sin(state.tick * 0.2) * 0.1;
+          const dangerRadius = size * 2.5;
+          const gradient = ctx.createRadialGradient(0, 0, size, 0, 0, dangerRadius);
+          gradient.addColorStop(0, `rgba(255, 50, 50, ${pulseIntensity})`);
+          gradient.addColorStop(1, 'rgba(255, 50, 50, 0)');
+          ctx.beginPath();
+          ctx.arc(0, 0, dangerRadius, 0, Math.PI * 2);
+          ctx.fillStyle = gradient;
+          ctx.fill();
+        }
+      }
+
       // Selection highlight and sense radius
       if (isSelected) {
         // Sense radius circle
