@@ -166,33 +166,65 @@ export function ControlPanel({
       {stats && (
         <div style={{ marginBottom: '16px' }}>
           <h3 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>Statistics</h3>
+
+          {/* Diet type breakdown */}
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+            marginBottom: '8px',
+            fontSize: '10px',
+          }}>
+            <span style={{
+              backgroundColor: '#44cc44',
+              color: 'black',
+              padding: '2px 6px',
+              borderRadius: '4px',
+            }}>
+              H: {creatures.filter(c => c.dietType === 'herbivore').length}
+            </span>
+            <span style={{
+              backgroundColor: '#cc4444',
+              color: 'white',
+              padding: '2px 6px',
+              borderRadius: '4px',
+            }}>
+              C: {creatures.filter(c => c.dietType === 'carnivore').length}
+            </span>
+            <span style={{
+              backgroundColor: '#aa44aa',
+              color: 'white',
+              padding: '2px 6px',
+              borderRadius: '4px',
+            }}>
+              O: {creatures.filter(c => c.dietType === 'omnivore').length}
+            </span>
+          </div>
+
           <div style={statRowStyle}>
             <span>Population:</span>
             <span>{stats.currentPopulation}</span>
           </div>
           <div style={statRowStyle}>
             <span>Generation:</span>
-            <span>{stats.maxGeneration}</span>
+            <span style={{ color: '#ff8844' }}>{stats.maxGeneration}</span>
           </div>
           <div style={statRowStyle}>
-            <span>Total Births:</span>
-            <span>{stats.totalBirths}</span>
-          </div>
-          <div style={statRowStyle}>
-            <span>Total Deaths:</span>
-            <span>{stats.totalDeaths}</span>
+            <span>Births / Deaths:</span>
+            <span>
+              <span style={{ color: '#44ff44' }}>{stats.totalBirths}</span>
+              {' / '}
+              <span style={{ color: '#ff4444' }}>{stats.totalDeaths}</span>
+            </span>
           </div>
           <div style={statRowStyle}>
             <span>Avg Energy:</span>
-            <span>{stats.averageEnergy.toFixed(1)}</span>
+            <span style={{
+              color: stats.averageEnergy > 50 ? '#44ff44' : stats.averageEnergy > 30 ? '#ffff44' : '#ff4444'
+            }}>{stats.averageEnergy.toFixed(1)}</span>
           </div>
           <div style={statRowStyle}>
-            <span>Avg Speed:</span>
-            <span>{stats.averageSpeed.toFixed(2)}</span>
-          </div>
-          <div style={statRowStyle}>
-            <span>Avg Size:</span>
-            <span>{stats.averageSize.toFixed(1)}</span>
+            <span>Oldest:</span>
+            <span>{(stats.oldestCreature / 60).toFixed(1)}s</span>
           </div>
         </div>
       )}
