@@ -307,6 +307,48 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       ctx.fill();
     }
 
+    // Draw hunting lines (predators targeting nearby prey)
+    for (const hunter of state.creatures) {
+      if (hunter.dietType === 'herbivore') continue; // Herbivores don't hunt
+
+      // Find nearest potential prey within sense radius
+      let nearestPrey: typeof hunter | null = null;
+      let nearestDist = hunter.senseRadius;
+
+      for (const prey of state.creatures) {
+        if (prey.id === hunter.id) continue;
+
+        // Check if this is valid prey
+        const canHunt =
+          (hunter.dietType === 'carnivore' && (prey.dietType === 'herbivore' || (prey.dietType === 'omnivore' && hunter.size > prey.size * 0.8))) ||
+          (hunter.dietType === 'omnivore' && prey.dietType === 'herbivore' && hunter.size > prey.size);
+
+        if (!canHunt) continue;
+
+        const dx = prey.x - hunter.x;
+        const dy = prey.y - hunter.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearestPrey = prey;
+        }
+      }
+
+      // Draw hunting line if prey is close enough (within attack range)
+      if (nearestPrey && nearestDist < hunter.size + nearestPrey.size + 30) {
+        const alpha = 0.4 * (1 - nearestDist / (hunter.size + nearestPrey.size + 30));
+        ctx.beginPath();
+        ctx.moveTo(hunter.x, hunter.y);
+        ctx.lineTo(nearestPrey.x, nearestPrey.y);
+        ctx.strokeStyle = `rgba(255, 100, 100, ${alpha})`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
     // Find oldest creature
     const oldestAge = Math.max(...state.creatures.map(c => c.age));
 
