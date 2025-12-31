@@ -1,8 +1,9 @@
-import type { WorldConfig, WorldStats } from '../types';
+import type { WorldConfig, WorldStats, SerializedCreature } from '../types';
 
 interface Props {
   config: WorldConfig | null;
   stats: WorldStats | null;
+  creatures: SerializedCreature[];
   paused: boolean;
   connected: boolean;
   speed: number;
@@ -13,9 +14,51 @@ interface Props {
   onChangeSpeed: (speed: number) => void;
 }
 
+function calculateEcosystemHealth(creatures: SerializedCreature[]): { score: number; status: string; color: string } {
+  if (creatures.length === 0) return { score: 0, status: 'Extinct', color: '#ff4444' };
+
+  const herbivores = creatures.filter(c => c.dietType === 'herbivore').length;
+  const carnivores = creatures.filter(c => c.dietType === 'carnivore').length;
+  const omnivores = creatures.filter(c => c.dietType === 'omnivore').length;
+  const total = creatures.length;
+
+  // Ideal ratios: ~50% herbivore, ~30% omnivore, ~20% carnivore
+  const herbRatio = herbivores / total;
+  const carnRatio = carnivores / total;
+  const omniRatio = omnivores / total;
+
+  // Score diversity (penalize missing types)
+  let diversityScore = 100;
+  if (herbivores === 0) diversityScore -= 40;
+  if (carnivores === 0) diversityScore -= 30;
+  if (omnivores === 0) diversityScore -= 20;
+
+  // Score balance (penalize if one type dominates too much)
+  if (herbRatio > 0.8 || carnRatio > 0.6 || omniRatio > 0.7) {
+    diversityScore -= 30;
+  }
+
+  // Population health
+  let popScore = 100;
+  if (total < 10) popScore -= 40;
+  else if (total < 20) popScore -= 20;
+  else if (total > 100) popScore -= 10;
+
+  const score = Math.max(0, Math.min(100, (diversityScore + popScore) / 2));
+
+  let status = 'Thriving';
+  let color = '#44ff44';
+  if (score < 30) { status = 'Critical'; color = '#ff4444'; }
+  else if (score < 50) { status = 'Struggling'; color = '#ff8844'; }
+  else if (score < 70) { status = 'Stable'; color = '#ffff44'; }
+
+  return { score, status, color };
+}
+
 export function ControlPanel({
   config,
   stats,
+  creatures,
   paused,
   connected,
   speed,
@@ -26,6 +69,8 @@ export function ControlPanel({
   onChangeSpeed,
 }: Props) {
   if (!config) return null;
+
+  const health = calculateEcosystemHealth(creatures);
 
   return (
     <div style={{
@@ -85,6 +130,35 @@ export function ControlPanel({
               {s}x
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Ecosystem Health */}
+      <div style={{ marginBottom: '16px' }}>
+        <h3 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>Ecosystem Health</h3>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '8px',
+        }}>
+          <div style={{
+            flex: 1,
+            height: '8px',
+            backgroundColor: '#333',
+            borderRadius: '4px',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              width: `${health.score}%`,
+              height: '100%',
+              backgroundColor: health.color,
+              transition: 'width 0.3s, background-color 0.3s',
+            }} />
+          </div>
+          <span style={{ color: health.color, fontSize: '12px', minWidth: '70px' }}>
+            {health.status}
+          </span>
         </div>
       </div>
 

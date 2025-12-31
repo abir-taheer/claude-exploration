@@ -153,6 +153,7 @@ function App() {
         <ControlPanel
           config={config}
           stats={state?.stats || null}
+          creatures={state?.creatures || []}
           paused={paused}
           connected={connected}
           speed={speed}
