@@ -116,10 +116,11 @@ function runSimulation() {
       recentKills = recentKills.slice(0, MAX_KILLS);
     }
 
-    // Respawn if extinction
+    // Respawn if extinction - preserve current config
     if (world.creatures.length === 0) {
-      console.log('Extinction event! Respawning creatures...');
-      initWorld(world.config);
+      console.log('Extinction event! Respawning creatures with current config...');
+      const currentConfig = { ...world.config };
+      initWorld(currentConfig);
       break;
     }
   }
