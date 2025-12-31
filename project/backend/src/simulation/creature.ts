@@ -247,9 +247,17 @@ export function move(
     ageMultiplier = 1.0 - (ageProgress * 0.3); // Reduce to 70% at max
   }
 
+  // Energy-based speed reduction (low energy = slower movement)
+  // Full speed above 50 energy, gradual decline to 60% at 0 energy
+  let energyMultiplier = 1.0;
+  if (creature.energy < 50) {
+    const energyRatio = creature.energy / 50;
+    energyMultiplier = 0.6 + (energyRatio * 0.4); // 60% at 0 energy, 100% at 50+ energy
+  }
+
   // Calculate velocity with minimum speed to prevent standing still
   const minSpeed = 0.3; // Creatures always move forward
-  const speed = Math.max(minSpeed, speedMultiplier) * creature.genome.maxSpeed * ageMultiplier;
+  const speed = Math.max(minSpeed, speedMultiplier) * creature.genome.maxSpeed * ageMultiplier * energyMultiplier;
   creature.velocity.x = Math.cos(creature.angle) * speed;
   creature.velocity.y = Math.sin(creature.angle) * speed;
 
