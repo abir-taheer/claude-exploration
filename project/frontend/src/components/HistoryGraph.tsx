@@ -26,8 +26,10 @@ export function HistoryGraph({ history, width, height }: Props) {
     const graphWidth = width - padding.left - padding.right;
     const graphHeight = height - padding.top - padding.bottom;
 
-    // Find data ranges
-    const maxPop = Math.max(...history.map(h => h.population), 10);
+    // Find data ranges - use max of individual diet counts for better scaling
+    const maxHerb = Math.max(...history.map(h => h.herbivores ?? 0), 1);
+    const maxCarn = Math.max(...history.map(h => h.carnivores ?? 0), 1);
+    const maxPop = Math.max(maxHerb, maxCarn, 10);
     const maxGen = Math.max(...history.map(h => h.maxGeneration), 1);
 
     // Draw axes
@@ -82,22 +84,6 @@ export function HistoryGraph({ history, width, height }: Props) {
     });
     ctx.stroke();
 
-    // Draw omnivore line (purple)
-    ctx.strokeStyle = '#aa44aa';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    history.forEach((point, i) => {
-      const x = padding.left + (i / (history.length - 1)) * graphWidth;
-      const omniCount = point.omnivores ?? 0;
-      const y = height - padding.bottom - (omniCount / maxPop) * graphHeight;
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-    ctx.stroke();
-
     // Draw generation line (orange dashed)
     ctx.strokeStyle = '#ff8844';
     ctx.lineWidth = 1;
@@ -120,24 +106,19 @@ export function HistoryGraph({ history, width, height }: Props) {
     ctx.textAlign = 'left';
 
     ctx.fillStyle = '#44cc44';
-    ctx.fillRect(width - 95, 6, 10, 10);
+    ctx.fillRect(width - 80, 6, 10, 10);
     ctx.fillStyle = '#fff';
-    ctx.fillText('🌱', width - 82, 15);
+    ctx.fillText('Herb', width - 67, 15);
 
     ctx.fillStyle = '#cc4444';
-    ctx.fillRect(width - 65, 6, 10, 10);
+    ctx.fillRect(width - 80, 20, 10, 10);
     ctx.fillStyle = '#fff';
-    ctx.fillText('🔴', width - 52, 15);
-
-    ctx.fillStyle = '#aa44aa';
-    ctx.fillRect(width - 35, 6, 10, 10);
-    ctx.fillStyle = '#fff';
-    ctx.fillText('🟣', width - 22, 15);
+    ctx.fillText('Carn', width - 67, 29);
 
     ctx.fillStyle = '#ff8844';
-    ctx.fillRect(width - 95, 22, 10, 10);
+    ctx.fillRect(width - 80, 34, 10, 10);
     ctx.fillStyle = '#fff';
-    ctx.fillText('Gen', width - 82, 31);
+    ctx.fillText('Gen', width - 67, 43);
 
   }, [history, width, height]);
 
