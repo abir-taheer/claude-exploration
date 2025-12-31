@@ -607,6 +607,8 @@ export interface SerializedCreature {
   foodEaten: number;
   creaturesKilled: number;
   dietType: string;
+  attackPower: number;
+  defense: number;
 }
 
 export interface SerializedFood {
@@ -630,12 +632,20 @@ export interface SerializedEvent {
   progress: number; // 0-1, how far through the event
 }
 
+export interface SerializedKill {
+  hunterType: string;
+  preyType: string;
+  hunterGen: number;
+  preyGen: number;
+}
+
 export interface SerializedState {
   tick: number;
   creatures: SerializedCreature[];
   food: SerializedFood[];
   hotspots: SerializedHotspot[];
   events: SerializedEvent[];
+  recentKills: SerializedKill[];
   stats: WorldStats;
   config: {
     width: number;
@@ -646,6 +656,7 @@ export interface SerializedState {
 export function serializeState(world: WorldState): SerializedState {
   return {
     tick: world.tick,
+    recentKills: [], // Will be added by server
     creatures: world.creatures.map(c => ({
       id: c.id,
       x: c.position.x,
@@ -661,6 +672,8 @@ export function serializeState(world: WorldState): SerializedState {
       foodEaten: c.foodEaten,
       creaturesKilled: c.creaturesKilled,
       dietType: c.genome.dietType,
+      attackPower: c.genome.attackPower,
+      defense: c.genome.defense,
     })),
     food: world.food.map(f => ({
       id: f.id,

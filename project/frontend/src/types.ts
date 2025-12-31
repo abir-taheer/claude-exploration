@@ -15,6 +15,8 @@ export interface SerializedCreature {
   foodEaten: number;
   creaturesKilled: number;
   dietType: 'herbivore' | 'carnivore' | 'omnivore';
+  attackPower: number;
+  defense: number;
 }
 
 export interface SerializedFood {
@@ -67,12 +69,20 @@ export interface SerializedEvent {
   progress: number;
 }
 
+export interface SerializedKill {
+  hunterType: string;
+  preyType: string;
+  hunterGen: number;
+  preyGen: number;
+}
+
 export interface SerializedState {
   tick: number;
   creatures: SerializedCreature[];
   food: SerializedFood[];
   hotspots: SerializedHotspot[];
   events: SerializedEvent[];
+  recentKills: SerializedKill[];
   stats: WorldStats;
   config: {
     width: number;

@@ -29,6 +29,17 @@ let tickInterval: ReturnType<typeof setInterval> | null = null;
 let simulationSpeed = 1; // 1x, 2x, 4x speed multiplier
 let history: HistoryPoint[] = [];
 
+// Kill feed - recent kill events
+interface KillEvent {
+  tick: number;
+  hunterType: string;
+  preyType: string;
+  hunterGen: number;
+  preyGen: number;
+}
+let recentKills: KillEvent[] = [];
+const MAX_KILLS = 10;
+
 // Connected clients
 const clients = new Set<WebSocket>();
 
@@ -70,6 +81,8 @@ function broadcastState() {
   if (clients.size === 0) return;
 
   const state = serializeState(world);
+  // Add recent kills to state
+  (state as any).recentKills = recentKills;
   const message = JSON.stringify({ type: 'state', data: state });
 
   clients.forEach(client => {
@@ -85,8 +98,23 @@ function runSimulation() {
 
   // Run multiple ticks based on speed multiplier
   for (let i = 0; i < simulationSpeed; i++) {
-    simulateTick(world);
+    const result = simulateTick(world);
     recordHistory();
+
+    // Track kills for kill feed
+    for (const kill of result.kills) {
+      recentKills.unshift({
+        tick: world.tick,
+        hunterType: kill.hunter.genome.dietType,
+        preyType: kill.prey.genome.dietType,
+        hunterGen: kill.hunter.generation,
+        preyGen: kill.prey.generation,
+      });
+    }
+    // Keep only recent kills
+    if (recentKills.length > MAX_KILLS) {
+      recentKills = recentKills.slice(0, MAX_KILLS);
+    }
 
     // Respawn if extinction
     if (world.creatures.length === 0) {

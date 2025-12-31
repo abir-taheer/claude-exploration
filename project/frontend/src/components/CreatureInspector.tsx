@@ -87,7 +87,7 @@ export function CreatureInspector({ creature, onClose }: Props) {
 
         <div style={rowStyle}>
           <span>Age:</span>
-          <span>{creature.age} ticks</span>
+          <span>{(creature.age / 60).toFixed(1)}s ({creature.age} ticks)</span>
         </div>
 
         <div style={rowStyle}>
@@ -117,6 +117,18 @@ export function CreatureInspector({ creature, onClose }: Props) {
         <div style={rowStyle}>
           <span>Sense Radius:</span>
           <span>{creature.senseRadius.toFixed(0)} px</span>
+        </div>
+
+        {creature.dietType !== 'herbivore' && (
+          <div style={rowStyle}>
+            <span>Attack Power:</span>
+            <span style={{ color: '#ff6666' }}>{(creature.attackPower * 100).toFixed(0)}%</span>
+          </div>
+        )}
+
+        <div style={rowStyle}>
+          <span>Defense:</span>
+          <span style={{ color: '#6666ff' }}>{(creature.defense * 100).toFixed(0)}%</span>
         </div>
 
         <div style={rowStyle}>

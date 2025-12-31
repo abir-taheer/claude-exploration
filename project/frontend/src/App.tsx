@@ -7,6 +7,7 @@ import { CreatureInspector } from './components/CreatureInspector';
 import { Leaderboard } from './components/Leaderboard';
 import { MiniMap } from './components/MiniMap';
 import { GenomeStats } from './components/GenomeStats';
+import { KillFeed } from './components/KillFeed';
 import type { SerializedCreature } from './types';
 
 function App() {
@@ -134,6 +135,7 @@ function App() {
               size={120}
               selectedCreature={selectedCreature}
             />
+            <KillFeed kills={state?.recentKills || []} />
           </div>
           <HistoryGraph
             history={history}
