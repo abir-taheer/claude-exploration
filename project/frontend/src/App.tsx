@@ -103,14 +103,57 @@ function App() {
       alignItems: 'center',
       padding: '20px',
     }}>
-      <h1 style={{
-        color: 'white',
-        fontFamily: 'monospace',
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '20px',
         marginBottom: '20px',
-        fontSize: '24px',
       }}>
-        EvoSim - Evolutionary Simulation
-      </h1>
+        <h1 style={{
+          color: 'white',
+          fontFamily: 'monospace',
+          margin: 0,
+          fontSize: '24px',
+        }}>
+          EvoSim
+        </h1>
+        <div style={{
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          color: '#888',
+        }}>
+          Tick: {state?.tick || 0} | Time: {Math.floor((state?.tick || 0) / 60)}:{String((state?.tick || 0) % 60).padStart(2, '0')}
+        </div>
+        {paused && (
+          <span style={{
+            backgroundColor: '#ff8844',
+            color: 'black',
+            padding: '4px 12px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+          }}>
+            PAUSED
+          </span>
+        )}
+        {!connected && (
+          <span style={{
+            backgroundColor: '#ff4444',
+            color: 'white',
+            padding: '4px 12px',
+            borderRadius: '4px',
+            fontSize: '12px',
+          }}>
+            DISCONNECTED
+          </span>
+        )}
+        <span style={{
+          color: '#666',
+          fontSize: '12px',
+        }}>
+          Speed: {speed}x
+        </span>
+      </div>
 
       <div style={{
         display: 'flex',
