@@ -568,9 +568,26 @@ export function simulateTick(world: WorldState): {
     }
   }
 
-  // Spawn new food
-  if (food.length < config.maxFood && Math.random() < config.foodSpawnRate) {
+  // Spawn new food (faster when population is low)
+  let effectiveSpawnRate = config.foodSpawnRate;
+  if (creatures.length < 15) {
+    effectiveSpawnRate *= 2; // Double food spawn when population is critical
+  } else if (creatures.length < 25) {
+    effectiveSpawnRate *= 1.5; // 50% more food when population is low
+  }
+
+  if (food.length < config.maxFood && Math.random() < effectiveSpawnRate) {
     food.push(createFood(config.width, config.height, config.foodEnergy));
+  }
+
+  // Emergency food boost when population is very low
+  if (creatures.length < 10 && food.length < config.maxFood * 0.5) {
+    // Spawn extra food to help survivors
+    for (let i = 0; i < 3; i++) {
+      if (food.length < config.maxFood) {
+        food.push(createFood(config.width, config.height, config.foodEnergy));
+      }
+    }
   }
 
   // Check for random events
