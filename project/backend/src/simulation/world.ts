@@ -186,17 +186,17 @@ export function createDefaultConfig(): WorldConfig {
   return {
     width: 800,
     height: 600,
-    initialCreatures: 30,
-    initialFood: 100,
-    maxFood: 200,
-    foodSpawnRate: 0.5,
-    foodEnergy: 20,
-    reproductionThreshold: 80,
-    reproductionCost: 40,
-    mutationRate: 0.1,
-    mutationStrength: 0.3,
-    energyDrainMultiplier: 0.5, // Lower = longer lifespan (0.5 = half the normal drain)
-    guaranteedHunting: false,   // If true, hunting always succeeds
+    initialCreatures: 40,       // More creatures for diverse ecosystem
+    initialFood: 150,           // Plenty of food to start
+    maxFood: 250,               // Higher cap for sustainability
+    foodSpawnRate: 0.8,         // Faster food spawning
+    foodEnergy: 25,             // More energy per food
+    reproductionThreshold: 75,  // Slightly lower threshold for more reproduction
+    reproductionCost: 35,       // Lower cost to encourage growth
+    mutationRate: 0.15,         // Moderate mutation for diversity
+    mutationStrength: 0.25,     // Moderate mutation strength
+    energyDrainMultiplier: 0.4, // Lower = longer lifespan
+    guaranteedHunting: false,   // Realistic hunting mechanics
   };
 }
 

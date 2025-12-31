@@ -459,6 +459,19 @@ export function SimulationCanvas({ state, width, height, selectedCreature, onSel
       ctx.fillStyle = pointColor;
       ctx.fill();
 
+      // Reproduction ready indicator (golden glow when energy > 80)
+      if (energy >= 80) {
+        const readyGlow = size * 2;
+        const pulseIntensity = 0.2 + Math.sin(state.tick * 0.15) * 0.1;
+        const gradient = ctx.createRadialGradient(0, 0, size * 0.8, 0, 0, readyGlow);
+        gradient.addColorStop(0, `rgba(255, 215, 0, ${pulseIntensity})`);
+        gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+        ctx.beginPath();
+        ctx.arc(0, 0, readyGlow, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+      }
+
       // Energy bar
       // Oldest creature crown indicator
       ctx.rotate(-angle); // Reset rotation
