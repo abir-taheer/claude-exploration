@@ -86,6 +86,8 @@ The network weights are encoded in the creature's genome and evolve over generat
 - **Eating particles** - green particles float up when food is consumed
 - **Food hotspots** - subtle green zones where food spawns more frequently
 - **Event visualization** - pulsing circles show active events
+- **Kill feed** - overlay showing recent predator kills with diet types
+- **Ecosystem health bar** - real-time indicator of ecosystem balance
 
 ### Random Events
 The simulation features periodic random events that shake up the ecosystem:
