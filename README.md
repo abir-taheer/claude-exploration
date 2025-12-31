@@ -88,6 +88,10 @@ The network weights are encoded in the creature's genome and evolve over generat
 - **Event visualization** - pulsing circles show active events
 - **Kill feed** - overlay showing recent predator kills with diet types
 - **Ecosystem health bar** - real-time indicator of ecosystem balance
+- **Hunting lines** - red dashed lines show when predators are targeting prey
+- **Danger glow** - red pulsing aura around prey when predator is nearby
+- **Simulation timer** - shows elapsed time and current tick count
+- **Status badges** - PAUSED/DISCONNECTED indicators in header
 
 ### Random Events
 The simulation features periodic random events that shake up the ecosystem:
@@ -153,6 +157,16 @@ The simulation features periodic random events that shake up the ecosystem:
 - **Reproduction Threshold**: Energy needed to reproduce
 - **Lifespan (Energy Drain)**: Controls how fast creatures lose energy (lower = longer lifespan)
 - **Guaranteed Hunting**: Toggle 100% hunt success rate for predators (default: off)
+
+## Realistic Food Chain
+
+The simulation models realistic ecological dynamics:
+
+- **Energy Transfer**: Only 15-20% of prey energy transfers to predators (ecological pyramid)
+- **Hunting Success**: Carnivores have +30% hunting bonus, omnivores have -30% penalty
+- **Directional Exploration**: Creatures move in natural paths, not circles
+- **Adaptive Food Spawning**: Food spawns faster when population is low
+- **Diet Diversity Re-seeding**: Extinct diet types occasionally reappear
 
 ## Observing Evolution
 
