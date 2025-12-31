@@ -49,9 +49,8 @@ export function genomeToColor(genome: Genome): string {
 // Get random diet type with weighted distribution
 function randomDietType(): DietType {
   const roll = Math.random();
-  if (roll < 0.5) return DietType.Herbivore;  // 50% herbivores
-  if (roll < 0.8) return DietType.Omnivore;   // 30% omnivores
-  return DietType.Carnivore;                   // 20% carnivores
+  if (roll < 0.7) return DietType.Herbivore;  // 70% herbivores
+  return DietType.Carnivore;                   // 30% carnivores
 }
 
 export function createRandomGenome(): Genome {
@@ -125,16 +124,14 @@ function mutateWeights(weights: number[], rate: number, strength: number): numbe
   });
 }
 
-// Mutate diet type (rare, only 5% chance when mutation occurs)
+// Mutate diet type (rare, only 3% chance when mutation occurs)
 function mutateDietType(parentDiet: DietType): DietType {
-  if (Math.random() > 0.05) return parentDiet;
-  // Small chance to shift diet type
-  const types = [DietType.Herbivore, DietType.Omnivore, DietType.Carnivore];
-  const currentIndex = types.indexOf(parentDiet);
-  // Can only shift to adjacent diet (herbivore <-> omnivore <-> carnivore)
-  if (currentIndex === 0) return DietType.Omnivore;
-  if (currentIndex === 2) return DietType.Omnivore;
-  return Math.random() < 0.5 ? DietType.Herbivore : DietType.Carnivore;
+  if (Math.random() > 0.03) return parentDiet;
+  // Small chance to flip between herbivore and carnivore
+  if (parentDiet === DietType.Herbivore) return DietType.Carnivore;
+  if (parentDiet === DietType.Carnivore) return DietType.Herbivore;
+  // If somehow omnivore, become herbivore
+  return DietType.Herbivore;
 }
 
 export function mutateGenome(parent: Genome, rate: number, strength: number): Genome {

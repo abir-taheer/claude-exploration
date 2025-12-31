@@ -545,7 +545,6 @@ export function simulateTick(world: WorldState): {
   if (world.tick % 300 === 0 && creatures.length > 5) {
     const herbivoreCount = creatures.filter(c => c.genome.dietType === DietType.Herbivore).length;
     const carnivoreCount = creatures.filter(c => c.genome.dietType === DietType.Carnivore).length;
-    const omnivoreCount = creatures.filter(c => c.genome.dietType === DietType.Omnivore).length;
 
     // If a diet type is completely missing or very rare, spawn one
     if (herbivoreCount === 0 || (herbivoreCount < 3 && Math.random() < 0.3)) {
@@ -557,12 +556,6 @@ export function simulateTick(world: WorldState): {
     if (carnivoreCount === 0 || (carnivoreCount < 2 && Math.random() < 0.2)) {
       const newCreature = createRandomCreature(config.width, config.height);
       newCreature.genome.dietType = DietType.Carnivore;
-      newCreature.color = genomeToColor(newCreature.genome);
-      creatures.push(newCreature);
-    }
-    if (omnivoreCount === 0 && Math.random() < 0.1) {
-      const newCreature = createRandomCreature(config.width, config.height);
-      newCreature.genome.dietType = DietType.Omnivore;
       newCreature.color = genomeToColor(newCreature.genome);
       creatures.push(newCreature);
     }
