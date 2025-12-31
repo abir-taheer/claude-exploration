@@ -6,6 +6,7 @@ import { HistoryGraph } from './components/HistoryGraph';
 import { CreatureInspector } from './components/CreatureInspector';
 import { Leaderboard } from './components/Leaderboard';
 import { MiniMap } from './components/MiniMap';
+import { GenomeStats } from './components/GenomeStats';
 import type { SerializedCreature } from './types';
 
 function App() {
@@ -144,6 +145,7 @@ function App() {
             selectedId={selectedCreature?.id || null}
             onSelect={setSelectedCreature}
           />
+          <GenomeStats creatures={state?.creatures || []} />
         </div>
 
         <ControlPanel

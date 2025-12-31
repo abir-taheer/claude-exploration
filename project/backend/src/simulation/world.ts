@@ -392,8 +392,18 @@ function checkAttackSuccess(hunter: Creature, prey: Creature, guaranteedHunting:
   // If guaranteed hunting is enabled, skip the roll
   if (guaranteedHunting) return true;
 
+  // Diet-based hunting success modifier
+  // Carnivores are specialized hunters (higher base success)
+  // Omnivores are jack-of-all-trades (lower success rate)
+  let dietModifier = 1.0;
+  if (hunter.genome.dietType === DietType.Carnivore) {
+    dietModifier = 1.3; // 30% bonus for specialized hunters
+  } else if (hunter.genome.dietType === DietType.Omnivore) {
+    dietModifier = 0.7; // 30% penalty for generalists
+  }
+
   // Attack roll: higher attack power vs higher defense
-  const attackRoll = hunter.genome.attackPower * (0.5 + Math.random() * 0.5);
+  const attackRoll = hunter.genome.attackPower * dietModifier * (0.5 + Math.random() * 0.5);
   const defenseRoll = prey.genome.defense * (0.5 + Math.random() * 0.5);
 
   return attackRoll > defenseRoll;
@@ -459,7 +469,10 @@ export function simulateTick(world: WorldState): {
     if (decision.attack > 0.5 && nearestPrey && !deadIds.has(nearestPrey.prey.id)) {
       if (checkAttackSuccess(creature, nearestPrey.prey, config.guaranteedHunting)) {
         // Successful hunt!
-        const energyGained = nearestPrey.prey.energy * creature.genome.energyEfficiency * 0.5;
+        // Ecological efficiency: only ~15% of prey energy transfers up the food chain
+        // Carnivores are slightly more efficient at extracting energy from prey
+        const baseTransfer = creature.genome.dietType === DietType.Carnivore ? 0.2 : 0.15;
+        const energyGained = nearestPrey.prey.energy * creature.genome.energyEfficiency * baseTransfer;
         creature.energy += energyGained;
         creature.energy = Math.min(100, creature.energy);
         creature.creaturesKilled++;

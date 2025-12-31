@@ -220,11 +220,10 @@ export function move(
   let speedMultiplier = decision.speed;
 
   if (!hasTarget) {
-    // Much more exploration when no target - use sine waves for smooth wandering
-    const wanderPhase = creature.age * 0.05;
-    const wanderTurn = Math.sin(wanderPhase) * 0.3; // Gentle oscillation
-    turnAmount = wanderTurn + (Math.random() - 0.5) * 0.1; // Add noise
-    speedMultiplier = 0.7 + Math.sin(wanderPhase * 0.7) * 0.3; // Vary speed too
+    // Directional exploration: move forward with occasional slight random turns
+    // This creates natural-looking paths instead of circles
+    turnAmount = (Math.random() - 0.5) * 0.15; // Small random turn (±0.075 radians)
+    speedMultiplier = 0.6 + Math.random() * 0.2; // Steady moderate speed
   } else {
     // Still add some noise to prevent perfect circles
     const noiseAmount = 0.05 * (1 - decision.speed);
